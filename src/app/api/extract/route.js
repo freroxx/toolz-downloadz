@@ -8,12 +8,12 @@ export async function GET(request) {
     return NextResponse.json({ detail: 'URL is required' }, { status: 400 });
   }
 
-  const apiUrl = process.env.API_URL;
+  const apiUrl = process.env.API_URL || 'https://toolz-downloadz-api.vercel.app';
   const apiKey = process.env.API_SECRET_KEY;
 
-  if (!apiUrl || !apiKey) {
-    console.error('Missing environment variables: API_URL or API_SECRET_KEY');
-    return NextResponse.json({ detail: 'Server configuration error' }, { status: 500 });
+  if (!apiKey) {
+    console.error('Missing API_SECRET_KEY on Vercel environment variables.');
+    return NextResponse.json({ detail: 'Server configuration error: API_SECRET_KEY is missing' }, { status: 500 });
   }
 
   try {
