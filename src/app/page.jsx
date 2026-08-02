@@ -65,9 +65,9 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-surface text-surface-on selection:bg-primary/30 font-sans">
+    <div className="min-h-screen bg-surface-dim text-surface-on selection:bg-primary/30 font-sans transition-colors duration-500">
       {/* Docked Header Bar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-4 flex justify-between items-center bg-surface/80 backdrop-blur-xl border-b border-surface-variant/50">
+      <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-4 flex justify-between items-center bg-surface-bright/80 backdrop-blur-xl border-b border-outline-variant/30">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-2xl bg-primary flex items-center justify-center text-primary-on font-black shadow-lg shadow-primary/20">
             TD
@@ -76,9 +76,9 @@ export default function Home() {
         </div>
         <div className="flex items-center gap-4">
           <a
-            href="https://github.com/toolz-downloadz/api"
+            href="https://github.com/freroxx/toolz-downloadz"
             target="_blank"
-            className="px-5 py-2.5 rounded-2xl bg-surface-variant text-surface-onVariant text-sm font-bold hover:bg-surface-onVariant/10 transition-all active:scale-95"
+            className="px-6 py-2.5 rounded-full bg-surface-container-highest text-surface-on font-bold text-sm hover:bg-primary/10 transition-all active:scale-95 border border-outline-variant/20"
           >
             GitHub
           </a>
@@ -92,18 +92,18 @@ export default function Home() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center space-y-8"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-xs font-black uppercase tracking-widest mb-4">
+          <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-primary-container text-primary-onContainer text-xs font-black uppercase tracking-[0.2em] mb-4 shadow-sm">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
             </span>
-            V1.1.0 Cross-Platform
+            M3 Expressive v1.1.0
           </div>
           <h1 className="text-7xl md:text-9xl font-black tracking-tighter text-primary leading-[0.85] filter drop-shadow-sm">
-            Fast.<br />Expressive.
+            Media.<br />Expressive.
           </h1>
-          <p className="text-xl md:text-2xl text-surface-onVariant font-medium max-w-2xl mx-auto opacity-80">
-            Universal media extraction for YouTube, TikTok, Instagram, and more. Optimized for speed and quality.
+          <p className="text-xl md:text-2xl text-surface-on-variant font-medium max-w-2xl mx-auto opacity-80 leading-relaxed">
+            Universal media extraction for the modern web. High-performance, secure, and beautiful.
           </p>
         </motion.div>
 
@@ -121,18 +121,18 @@ export default function Home() {
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="Paste link from YouTube, TikTok, X, etc..."
-              className="w-full pl-10 pr-44 py-8 rounded-[2.5rem] bg-surface-variant/50 backdrop-blur-sm text-surface-onVariant border-4 border-transparent focus:border-primary/20 focus:bg-surface focus:shadow-[0_0_80px_-20px_rgba(103,80,164,0.15)] outline-none text-xl md:text-2xl transition-all placeholder:text-surface-onVariant/30 shadow-2xl"
+              className="w-full pl-10 pr-44 py-9 rounded-full bg-surface-bright text-surface-on border-4 border-transparent focus:border-primary/20 focus:bg-surface-bright focus:shadow-[0_0_80px_-20px_rgba(103,80,164,0.15)] outline-none text-xl md:text-2xl transition-all placeholder:text-surface-on-variant/30 shadow-2xl dark:shadow-black/40"
             />
             <button
               disabled={status === 'loading'}
-              className="absolute right-4 px-12 py-5 rounded-[2rem] bg-primary text-primary-on font-black text-lg hover:scale-[1.05] active:scale-95 disabled:opacity-50 transition-all shadow-xl shadow-primary/30"
+              className="absolute right-4 px-12 py-5 rounded-full bg-primary text-primary-on font-black text-lg hover:scale-[1.05] active:scale-95 disabled:opacity-50 transition-all shadow-xl shadow-primary/30"
             >
               {status === 'loading' ? (
                 <div className="flex items-center gap-2">
                   <div className="w-5 h-5 border-4 border-primary-on/30 border-t-primary-on rounded-full animate-spin" />
                   <span>...</span>
                 </div>
-              ) : 'Download'}
+              ) : 'Extract'}
             </button>
           </div>
         </motion.form>
@@ -148,10 +148,10 @@ export default function Home() {
                 exit={{ opacity: 0 }}
                 className="w-full flex flex-col gap-8 max-w-3xl"
               >
-                <div className="w-full aspect-video bg-surface-variant/50 animate-pulse rounded-[3rem]" />
+                <div className="w-full aspect-video bg-surface-container-high animate-pulse rounded-[3rem]" />
                 <div className="space-y-4">
-                  <div className="h-12 w-3/4 bg-surface-variant/50 animate-pulse rounded-2xl" />
-                  <div className="h-8 w-1/2 bg-surface-variant/50 animate-pulse rounded-2xl" />
+                  <div className="h-12 w-3/4 bg-surface-container-high animate-pulse rounded-2xl" />
+                  <div className="h-8 w-1/2 bg-surface-container-high animate-pulse rounded-2xl" />
                 </div>
               </motion.div>
             )}
@@ -161,7 +161,7 @@ export default function Home() {
                 key="error"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="w-full max-w-2xl p-10 rounded-[2.5rem] bg-error-container text-error-onContainer border-4 border-error/10 flex flex-col items-center gap-6 text-center shadow-2xl"
+                className="w-full max-w-2xl p-10 rounded-[3rem] bg-error-container text-error-onContainer border-4 border-error/10 flex flex-col items-center gap-6 text-center shadow-2xl"
               >
                 <div className="w-20 h-20 rounded-full bg-error flex items-center justify-center text-error-on text-4xl font-black shadow-lg">!</div>
                 <div className="space-y-2">
@@ -170,7 +170,7 @@ export default function Home() {
                 </div>
                 <button
                   onClick={() => setStatus('idle')}
-                  className="px-8 py-3 rounded-2xl bg-error text-error-on font-bold hover:scale-105 transition-transform"
+                  className="px-10 py-4 rounded-full bg-error text-error-on font-black hover:scale-105 transition-transform shadow-lg shadow-error/20"
                 >
                   Try Again
                 </button>
@@ -182,106 +182,106 @@ export default function Home() {
                 key="success"
                 initial={{ opacity: 0, y: 50, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                className="w-full max-w-4xl bg-surface-variant/30 backdrop-blur-md rounded-[3.5rem] overflow-hidden shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] flex flex-col border border-white/10"
+                className="w-full max-w-4xl bg-surface-container rounded-[4rem] overflow-hidden shadow-[0_32px_64px_-16px_rgba(0,0,0,0.15)] dark:shadow-black/50 flex flex-col border border-outline-variant/10"
               >
                 {/* Media Section */}
-                <div className="flex flex-col md:flex-row">
+                <div className="flex flex-col lg:flex-row">
                   {/* Thumbnail & Preview */}
-                  <div className="w-full md:w-1/2 relative aspect-square md:aspect-auto">
+                  <div className="w-full lg:w-1/2 relative aspect-square lg:aspect-auto">
                     <img
                       src={data.thumbnail}
                       alt={data.title}
                       className="w-full h-full object-cover"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent md:bg-gradient-to-r md:from-transparent md:via-transparent md:to-black/10" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent lg:bg-gradient-to-r lg:from-transparent lg:via-transparent lg:to-black/20" />
 
                     {data.duration && (
-                      <div className="absolute bottom-6 left-6 px-4 py-2 bg-black/80 backdrop-blur-md text-white text-sm font-black rounded-2xl border border-white/10">
+                      <div className="absolute bottom-8 left-8 px-5 py-2 bg-black/80 backdrop-blur-xl text-white text-sm font-black rounded-2xl border border-white/10 shadow-2xl">
                         {formatDuration(data.duration)}
                       </div>
                     )}
 
-                    <div className={`absolute top-6 left-6 px-5 py-2 rounded-full text-xs font-black uppercase tracking-[0.2em] shadow-2xl ${getPlatformColor(data.platform)}`}>
+                    <div className={`absolute top-8 left-8 px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-[0.25em] shadow-2xl ${getPlatformColor(data.platform)}`}>
                       {data.platform}
                     </div>
                   </div>
 
                   {/* Info & Stats */}
-                  <div className="w-full md:w-1/2 p-10 md:p-12 flex flex-col gap-8 justify-between bg-surface/40">
-                    <div className="space-y-6">
-                      <div className="space-y-3">
-                        <h3 className="text-3xl md:text-4xl font-black leading-tight tracking-tight text-surface-on line-clamp-3">
+                  <div className="w-full lg:w-1/2 p-12 lg:p-16 flex flex-col gap-10 justify-between bg-surface-container-high/50">
+                    <div className="space-y-8">
+                      <div className="space-y-4">
+                        <h3 className="text-4xl lg:text-5xl font-black leading-[1.1] tracking-tighter text-surface-on line-clamp-3">
                           {data.title}
                         </h3>
                         <a
                           href={data.uploader_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xl text-primary font-bold hover:underline flex items-center gap-2 group"
+                          className="text-2xl text-primary font-black hover:underline flex items-center gap-3 group"
                         >
-                          <span className="w-2 h-2 rounded-full bg-primary group-hover:scale-150 transition-transform" />
+                          <span className="w-3 h-3 rounded-full bg-primary group-hover:scale-150 transition-transform shadow-sm shadow-primary/40" />
                           {data.uploader}
                         </a>
                       </div>
 
                       {/* Stats Grid */}
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid grid-cols-3 gap-4">
                         {data.stats.views !== null && (
-                          <div className="p-4 rounded-3xl bg-surface/60 border border-surface-variant/50 flex flex-col items-center justify-center text-center">
-                            <span className="text-xs font-black text-surface-onVariant/40 uppercase tracking-widest mb-1">Views</span>
-                            <span className="text-xl font-black text-surface-on">{formatNumber(data.stats.views)}</span>
+                          <div className="p-5 rounded-[2.5rem] bg-surface-bright border border-outline-variant/10 flex flex-col items-center justify-center text-center shadow-sm">
+                            <span className="text-[10px] font-black text-surface-on-variant opacity-40 uppercase tracking-[0.2em] mb-1">Views</span>
+                            <span className="text-2xl font-black text-surface-on tracking-tight">{formatNumber(data.stats.views)}</span>
                           </div>
                         )}
                         {data.stats.likes !== null && (
-                          <div className="p-4 rounded-3xl bg-surface/60 border border-surface-variant/50 flex flex-col items-center justify-center text-center">
-                            <span className="text-xs font-black text-surface-onVariant/40 uppercase tracking-widest mb-1">Likes</span>
-                            <span className="text-xl font-black text-surface-on">{formatNumber(data.stats.likes)}</span>
+                          <div className="p-5 rounded-[2.5rem] bg-surface-bright border border-outline-variant/10 flex flex-col items-center justify-center text-center shadow-sm">
+                            <span className="text-[10px] font-black text-surface-on-variant opacity-40 uppercase tracking-[0.2em] mb-1">Likes</span>
+                            <span className="text-2xl font-black text-surface-on tracking-tight">{formatNumber(data.stats.likes)}</span>
                           </div>
                         )}
                         {data.stats.comments !== null && (
-                          <div className="p-4 rounded-3xl bg-surface/60 border border-surface-variant/50 flex flex-col items-center justify-center text-center">
-                            <span className="text-xs font-black text-surface-onVariant/40 uppercase tracking-widest mb-1">Talk</span>
-                            <span className="text-xl font-black text-surface-on">{formatNumber(data.stats.comments)}</span>
+                          <div className="p-5 rounded-[2.5rem] bg-surface-bright border border-outline-variant/10 flex flex-col items-center justify-center text-center shadow-sm">
+                            <span className="text-[10px] font-black text-surface-on-variant opacity-40 uppercase tracking-[0.2em] mb-1">Talk</span>
+                            <span className="text-2xl font-black text-surface-on tracking-tight">{formatNumber(data.stats.comments)}</span>
                           </div>
                         )}
                       </div>
                     </div>
 
                     {/* Main Actions */}
-                    <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-5">
                       <a
                         href={data.download_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-3 py-6 rounded-3xl bg-primary text-primary-on font-black text-xl shadow-2xl shadow-primary/30 hover:shadow-primary/50 hover:-translate-y-1 transition-all active:scale-95 active:translate-y-0"
+                        className="flex items-center justify-center gap-4 py-8 rounded-[2.5rem] bg-primary text-primary-on font-black text-2xl shadow-2xl shadow-primary/30 hover:shadow-primary/50 hover:-translate-y-1 transition-all active:scale-95 active:translate-y-0"
                       >
-                        DOWNLOAD NOW
-                        <span className="text-2xl">↓</span>
+                        DOWNLOAD BEST
+                        <span className="text-3xl">↓</span>
                       </a>
                     </div>
                   </div>
                 </div>
 
                 {/* Secondary Actions (Formats) */}
-                <div className="p-10 md:p-12 bg-surface/20 border-t border-white/5 space-y-10">
+                <div className="p-12 lg:p-16 bg-surface-container-highest/30 border-t border-outline-variant/10 space-y-12">
                   {/* Video Formats */}
                   {data.formats.video && data.formats.video.length > 0 && (
-                    <div className="space-y-6">
-                      <div className="flex items-center gap-4">
-                        <div className="h-px flex-1 bg-surface-onVariant/10" />
-                        <h4 className="text-sm font-black text-surface-onVariant/50 uppercase tracking-[0.3em]">Video Resolutions</h4>
-                        <div className="h-px flex-1 bg-surface-onVariant/10" />
+                    <div className="space-y-8">
+                      <div className="flex items-center gap-6">
+                        <div className="h-[2px] flex-1 bg-outline-variant/10" />
+                        <h4 className="text-xs font-black text-surface-on-variant opacity-40 uppercase tracking-[0.4em]">Video Formats</h4>
+                        <div className="h-[2px] flex-1 bg-outline-variant/10" />
                       </div>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                         {data.formats.video.slice(0, 8).map((f, i) => (
                           <a
                             key={i}
                             href={f.url}
                             target="_blank"
-                            className="px-5 py-4 rounded-2xl bg-surface/40 border border-surface-variant/50 text-surface-on text-center transition-all hover:bg-primary hover:text-primary-on hover:border-transparent group"
+                            className="px-6 py-5 rounded-[2rem] bg-surface-bright border border-outline-variant/10 text-surface-on text-center transition-all hover:bg-primary hover:text-primary-on hover:border-transparent group shadow-sm hover:shadow-xl hover:-translate-y-1"
                           >
-                            <div className="text-xs font-black opacity-40 group-hover:opacity-60 mb-1">{f.ext.toUpperCase()}</div>
-                            <div className="font-black text-lg">{f.resolution}</div>
+                            <div className="text-[10px] font-black opacity-30 group-hover:opacity-60 mb-1 tracking-widest">{f.ext.toUpperCase()}</div>
+                            <div className="font-black text-xl tracking-tighter">{f.resolution}</div>
                           </a>
                         ))}
                       </div>
@@ -290,21 +290,21 @@ export default function Home() {
 
                   {/* Audio Formats */}
                   {data.formats.audio && data.formats.audio.length > 0 && (
-                    <div className="space-y-6">
-                      <div className="flex items-center gap-4">
-                        <div className="h-px flex-1 bg-surface-onVariant/10" />
-                        <h4 className="text-sm font-black text-surface-onVariant/50 uppercase tracking-[0.3em]">Audio Only</h4>
-                        <div className="h-px flex-1 bg-surface-onVariant/10" />
+                    <div className="space-y-8">
+                      <div className="flex items-center gap-6">
+                        <div className="h-[2px] flex-1 bg-outline-variant/10" />
+                        <h4 className="text-xs font-black text-surface-on-variant opacity-40 uppercase tracking-[0.4em]">Audio Only</h4>
+                        <div className="h-[2px] flex-1 bg-outline-variant/10" />
                       </div>
-                      <div className="flex flex-wrap justify-center gap-3">
+                      <div className="flex flex-wrap justify-center gap-4">
                         {data.formats.audio.slice(0, 4).map((f, i) => (
                           <a
                             key={i}
                             href={f.url}
                             target="_blank"
-                            className="px-8 py-4 rounded-2xl bg-secondary-container text-secondary-onContainer font-black flex items-center gap-3 hover:scale-105 transition-transform"
+                            className="px-10 py-5 rounded-[2rem] bg-secondary-container text-secondary-onContainer font-black text-lg flex items-center gap-4 hover:scale-105 transition-all shadow-lg shadow-secondary/10"
                           >
-                            <span>♫</span>
+                            <span className="text-2xl">♫</span>
                             {f.resolution !== 'unknown' ? f.resolution : `${f.ext.toUpperCase()} Audio`}
                           </a>
                         ))}
@@ -319,16 +319,17 @@ export default function Home() {
       </main>
 
       {/* Footer Branding */}
-      <footer className="py-20 text-center space-y-4">
-        <div className="text-surface-onVariant/20 text-sm font-black tracking-[0.5em] uppercase">
+      <footer className="py-24 text-center space-y-6">
+        <div className="text-surface-on-variant/20 text-sm font-black tracking-[0.6em] uppercase">
           Toolz Downloadz Engine
         </div>
-        <p className="text-xs text-surface-onVariant/40 font-bold max-w-md mx-auto px-6">
-          A high-performance media bridge built for the modern web.
-          Respect creators, download responsibly.
+        <p className="text-sm text-surface-on-variant/40 font-bold max-w-xl mx-auto px-8 leading-relaxed">
+          A high-performance media bridge built for the modern web.<br />
+          Open source and free forever.
         </p>
       </footer>
     </div>
   )
 }
+
 
