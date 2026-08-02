@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 export default function Home() {
@@ -8,6 +8,8 @@ export default function Home() {
   const [status, setStatus] = useState('idle') // idle, loading, success, error
   const [data, setData] = useState(null)
   const [error, setError] = useState('')
+  const [selected, setSelected] = useState('best') // 'best' | format index key
+  const [downloadState, setDownloadState] = useState('idle') // idle, downloading, done
 
   const handleExtract = async (e) => {
     e.preventDefault()
@@ -32,6 +34,8 @@ export default function Home() {
           throw new Error(result.detail || 'Failed to extract media.')
         }
         setData(result)
+        setSelected('best')
+        setDownloadState('idle')
         setStatus('success')
       } else {
         throw new Error('Server returned an invalid response. Please try again later.')
@@ -54,6 +58,68 @@ export default function Home() {
     if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M'
     if (num >= 1000) return (num / 1000).toFixed(1) + 'K'
     return num.toString()
+  }
+
+  const formatBytes = (n) => {
+    if (!n || n < 0) return null
+    if (n >= 1024 * 1024 * 1024) return (n / 1024 / 1024 / 1024).toFixed(2) + ' GB'
+    if (n >= 1024 * 1024) return (n / 1024 / 1024).toFixed(1) + ' MB'
+    if (n >= 1024) return (n / 1024).toFixed(0) + ' KB'
+    return n + ' B'
+  }
+
+  const formatDate = (raw) => {
+    if (!raw || raw.length !== 8) return null
+    const y = raw.slice(0, 4)
+    const m = raw.slice(4, 6)
+    const d = raw.slice(6, 8)
+    return `${y}.${m}.${d}`
+  }
+
+  const safeName = (name) =>
+    String(name || 'media').replace(/[\\/:*?"<>|]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120)
+
+  const downloadUrlFor = (fmt) => {
+    const raw = fmt ? fmt.url : data?.download_url
+    if (!raw) return '#'
+    const ext = fmt ? fmt.ext : (data?.ext || 'mp4')
+    const name = `${safeName(data?.title)}.${ext}` || 'media'
+    return `/api/download?url=${encodeURIComponent(raw)}&name=${encodeURIComponent(name)}`
+  }
+
+  // Build a quality-ready list combining best, video and audio formats.
+  const formatOptions = useMemo(() => {
+    if (!data || data.blocked) return { best: null, video: [], audio: [] }
+    const video = (data.formats?.video || []).map((f, i) => ({
+      key: `v${i}`,
+      kind: 'video',
+      url: f.url,
+      ext: f.ext || 'mp4',
+      label: `${f.resolution || 'Video'}`,
+      detail: (f.acodec && f.acodec !== 'none' ? 'with audio' : 'video only') +
+        (f.filesize ? ` · ${formatBytes(f.filesize)}` : ''),
+    }))
+    const audio = (data.formats?.audio || []).map((f, i) => ({
+      key: `a${i}`,
+      kind: 'audio',
+      url: f.url,
+      ext: f.ext || 'mp3',
+      label: `${(f.resolution !== 'unknown' ? f.resolution : f.ext || 'audio').toUpperCase()} audio`,
+      detail: f.filesize ? formatBytes(f.filesize) : '',
+    }))
+    return { best: data.download_url || null, video, audio }
+  }, [data])
+
+  const activeFormat = selected === 'best'
+    ? { key: 'best', url: data?.download_url, ext: data?.ext || 'mp4', label: 'Best quality' }
+    : formatOptions.video.concat(formatOptions.audio).find((f) => f.key === selected) || null
+
+  const handleDownload = () => {
+    if (!activeFormat?.url) return
+    setDownloadState('downloading')
+    // Delegate to the same-origin proxy route which streams with Content-Disposition: attachment.
+    window.location.href = downloadUrlFor(activeFormat.key === 'best' ? null : activeFormat)
+    setDownloadState('done')
   }
 
   const getPlatformColor = (platform) => {
@@ -303,90 +369,128 @@ export default function Home() {
                       </div>
 
                       {/* Stats Grid */}
-                      <div className="grid grid-cols-3 gap-2 md:gap-4">
-                        {data.stats.views !== null && (
-                          <div className="p-3 md:p-5 rounded-2xl md:rounded-[2.5rem] bg-surface-bright border border-outline-variant/10 flex flex-col items-center justify-center text-center shadow-sm">
-                            <span className="text-[8px] md:text-[10px] font-black text-surface-on-variant opacity-40 uppercase tracking-[0.2em] mb-1">Views</span>
-                            <span className="text-base md:text-2xl font-black text-surface-on tracking-tight">{formatNumber(data.stats.views)}</span>
+                      {(() => {
+                        const chips = []
+                        const push = (label, value) => {
+                          if (value !== null && value !== undefined) chips.push({ label, value })
+                        }
+                        push('Views', data.stats?.views)
+                        push('Likes', data.stats?.likes)
+                        push('Comments', data.stats?.comments)
+                        push('Reposts', data.stats?.reposts)
+                        let extra = ''
+                        const d = formatDate(data.upload_date)
+                        if (d) extra = `Published ${d}`
+                        return (
+                          <div className="w-full space-y-3">
+                            <div className={`grid gap-2 md:gap-3 ${chips.length >= 4 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'}`}>
+                              {chips.map((s, i) => (
+                                <div key={i} className="p-3 md:p-5 rounded-2xl md:rounded-[2.5rem] bg-surface-bright border border-outline-variant/10 flex flex-col items-center justify-center text-center shadow-sm">
+                                  <span className="text-[8px] md:text-[10px] font-black text-surface-on-variant opacity-40 uppercase tracking-[0.2em] mb-1">{s.label}</span>
+                                  <span className="text-base md:text-2xl font-black text-surface-on tracking-tight">{formatNumber(s.value)}</span>
+                                </div>
+                              ))}
+                            </div>
+                            {extra && (
+                              <div className="text-center">
+                                <span className="text-xs md:text-sm font-black text-surface-on-variant opacity-50 uppercase tracking-[0.2em]">{extra}</span>
+                              </div>
+                            )}
                           </div>
-                        )}
-                        {data.stats.likes !== null && (
-                          <div className="p-3 md:p-5 rounded-2xl md:rounded-[2.5rem] bg-surface-bright border border-outline-variant/10 flex flex-col items-center justify-center text-center shadow-sm">
-                            <span className="text-[8px] md:text-[10px] font-black text-surface-on-variant opacity-40 uppercase tracking-[0.2em] mb-1">Likes</span>
-                            <span className="text-base md:text-2xl font-black text-surface-on tracking-tight">{formatNumber(data.stats.likes)}</span>
-                          </div>
-                        )}
-                        {data.stats.comments !== null && (
-                          <div className="p-3 md:p-5 rounded-2xl md:rounded-[2.5rem] bg-surface-bright border border-outline-variant/10 flex flex-col items-center justify-center text-center shadow-sm">
-                            <span className="text-[8px] md:text-[10px] font-black text-surface-on-variant opacity-40 uppercase tracking-[0.2em] mb-1">Talk</span>
-                            <span className="text-base md:text-2xl font-black text-surface-on tracking-tight">{formatNumber(data.stats.comments)}</span>
-                          </div>
-                        )}
-                      </div>
+                        )
+                      })()}
                     </div>
 
                     {/* Main Actions */}
-                    <div className="flex flex-col gap-4 md:gap-5">
-                      <a
-                        href={data.download_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-3 md:gap-4 py-5 md:py-8 rounded-2xl md:rounded-[2.5rem] bg-primary text-primary-on font-black text-lg md:text-2xl shadow-2xl shadow-primary/30 hover:shadow-primary/50 hover:-translate-y-1 transition-all active:scale-95 active:translate-y-0"
+                    <div className="flex flex-col gap-4">
+                      <button
+                        onClick={handleDownload}
+                        disabled={!activeFormat?.url || downloadState === 'downloading'}
+                        className="flex items-center justify-center gap-3 md:gap-4 py-5 md:py-8 rounded-2xl md:rounded-[2.5rem] bg-primary text-primary-on font-black text-lg md:text-2xl shadow-2xl shadow-primary/30 hover:shadow-primary/50 hover:-translate-y-1 transition-all active:scale-95 active:translate-y-0 disabled:opacity-50 disabled:hover:translate-y-0"
                       >
-                        DOWNLOAD BEST
+                        {downloadState === 'downloading' ? 'STARTING…' : 'DOWNLOAD'}
                         <span className="text-xl md:text-3xl">↓</span>
-                      </a>
+                      </button>
+                      {activeFormat && (
+                        <div className="text-center text-xs md:text-sm font-black text-primary tracking-[0.2em] uppercase opacity-70">
+                          {activeFormat.label}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
 
-                {/* Secondary Actions (Formats) */}
+                {/* Quality Picker */}
                 <div className="p-6 md:p-12 lg:p-16 bg-surface-container-highest/30 border-t border-outline-variant/10 space-y-8 md:space-y-12">
-                  {/* Video Formats */}
-                  {data.formats.video && data.formats.video.length > 0 && (
+                  {(formatOptions.video.length > 0 || formatOptions.audio.length > 0) && (
                     <div className="space-y-6 md:space-y-8">
                       <div className="flex items-center gap-4 md:gap-6">
                         <div className="h-[1px] md:h-[2px] flex-1 bg-outline-variant/10" />
-                        <h4 className="text-[10px] md:text-xs font-black text-surface-on-variant opacity-40 uppercase tracking-[0.3em] md:tracking-[0.4em]">Video Formats</h4>
+                        <h4 className="text-[10px] md:text-xs font-black text-surface-on-variant opacity-40 uppercase tracking-[0.3em] md:tracking-[0.4em]">Quality & Formats</h4>
                         <div className="h-[1px] md:h-[2px] flex-1 bg-outline-variant/10" />
                       </div>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 md:gap-4">
-                        {data.formats.video.slice(0, 8).map((f, i) => (
-                          <a
-                            key={i}
-                            href={f.url}
-                            target="_blank"
-                            className="px-4 py-3 md:px-6 md:py-5 rounded-xl md:rounded-[2rem] bg-surface-bright border border-outline-variant/10 text-surface-on text-center transition-all hover:bg-primary hover:text-primary-on hover:border-transparent group shadow-sm hover:shadow-xl hover:-translate-y-1"
-                          >
-                            <div className="text-[8px] md:text-[10px] font-black opacity-30 group-hover:opacity-60 mb-1 tracking-widest">{f.ext.toUpperCase()}</div>
-                            <div className="font-black text-base md:text-xl tracking-tighter">{f.resolution}</div>
-                          </a>
-                        ))}
-                      </div>
-                    </div>
-                  )}
 
-                  {/* Audio Formats */}
-                  {data.formats.audio && data.formats.audio.length > 0 && (
-                    <div className="space-y-6 md:space-y-8">
-                      <div className="flex items-center gap-4 md:gap-6">
-                        <div className="h-[1px] md:h-[2px] flex-1 bg-outline-variant/10" />
-                        <h4 className="text-[10px] md:text-xs font-black text-surface-on-variant opacity-40 uppercase tracking-[0.3em] md:tracking-[0.4em]">Audio Only</h4>
-                        <div className="h-[1px] md:h-[2px] flex-1 bg-outline-variant/10" />
-                      </div>
-                      <div className="flex flex-wrap justify-center gap-2 md:gap-4">
-                        {data.formats.audio.slice(0, 4).map((f, i) => (
-                          <a
-                            key={i}
-                            href={f.url}
-                            target="_blank"
-                            className="px-6 md:px-10 py-3 md:py-5 rounded-xl md:rounded-[2rem] bg-secondary-container text-secondary-onContainer font-black text-sm md:text-lg flex items-center gap-3 md:gap-4 hover:scale-105 transition-all shadow-lg shadow-secondary/10"
+                      {formatOptions.best && (
+                        <div className="flex flex-col gap-3">
+                          <p className="text-[10px] md:text-xs font-black text-surface-on-variant opacity-40 uppercase tracking-[0.25em]">Recommended</p>
+                          <button
+                            onClick={() => setSelected('best')}
+                            className={`text-left px-5 md:px-8 py-4 md:py-6 rounded-2xl md:rounded-[2rem] flex items-center justify-between gap-4 transition-all border-2 ${
+                              selected === 'best'
+                                ? 'bg-primary text-primary-on border-primary shadow-xl shadow-primary/20 scale-[1.01]'
+                                : 'bg-surface-bright text-surface-on border-outline-variant/10 hover:border-primary/40 shadow-sm'
+                            }`}
                           >
-                            <span className="text-xl md:text-2xl">♫</span>
-                            {f.resolution !== 'unknown' ? f.resolution : `${f.ext.toUpperCase()} Audio`}
-                          </a>
-                        ))}
-                      </div>
+                            <span className="font-black text-base md:text-xl tracking-tight">Best quality</span>
+                            <span className="text-sm md:text-base font-black opacity-60">MP4 · auto</span>
+                          </button>
+                        </div>
+                      )}
+
+                      {formatOptions.video.length > 0 && (
+                        <div className="flex flex-col gap-3 md:gap-4">
+                          <p className="text-[10px] md:text-xs font-black text-surface-on-variant opacity-40 uppercase tracking-[0.25em]">Video Formats</p>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-4">
+                            {formatOptions.video.slice(0, 12).map((f) => (
+                              <button
+                                key={f.key}
+                                onClick={() => setSelected(f.key)}
+                                className={`px-4 py-3 md:px-6 md:py-5 rounded-xl md:rounded-[1.8rem] border-2 text-center transition-all group ${
+                                  selected === f.key
+                                    ? 'bg-primary text-primary-on border-primary shadow-lg shadow-primary/20 scale-[1.03]'
+                                    : 'bg-surface-bright text-surface-on border-outline-variant/10 hover:border-primary/40 hover:-translate-y-0.5 shadow-sm'
+                                }`}
+                              >
+                                <div className="text-[8px] md:text-[10px] font-black opacity-40 mb-1 tracking-widest uppercase">{f.ext}</div>
+                                <div className="font-black text-base md:text-lg tracking-tighter">{f.label}</div>
+                                {f.detail && <div className="text-[9px] md:text-xs font-bold opacity-60 mt-1">{f.detail}</div>}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {formatOptions.audio.length > 0 && (
+                        <div className="flex flex-col gap-3 md:gap-4">
+                          <p className="text-[10px] md:text-xs font-black text-surface-on-variant opacity-40 uppercase tracking-[0.25em]">Audio Only</p>
+                          <div className="flex flex-wrap gap-2 md:gap-4">
+                            {formatOptions.audio.slice(0, 6).map((f) => (
+                              <button
+                                key={f.key}
+                                onClick={() => setSelected(f.key)}
+                                className={`px-6 md:px-10 py-3 md:py-5 rounded-xl md:rounded-[2rem] font-black text-sm md:text-lg flex items-center gap-3 md:gap-4 transition-all ${
+                                  selected === f.key
+                                    ? 'bg-secondary text-secondary-on shadow-xl shadow-secondary/20'
+                                    : 'bg-secondary-container text-secondary-onContainer hover:bg-secondary hover:text-secondary-on'
+                                }`}
+                              >
+                                <span className="text-xl md:text-2xl">♫</span>
+                                <span>{f.label}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
