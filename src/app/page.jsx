@@ -18,11 +18,10 @@ export default function Home() {
     setData(null)
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://toolz-downloadz-api.vercel.app';
-      const response = await fetch(`${apiUrl}/api/extract?url=${encodeURIComponent(url)}`, {
+      const response = await fetch(`/api/extract?url=${encodeURIComponent(url)}`, {
         method: 'GET',
         headers: {
-          'X-API-KEY': process.env.NEXT_PUBLIC_API_SECRET_KEY || 'dmtPYMX9fBH0VinH2dPf2tFsuET1Gz6Cu5MKyHhbunE',
+          'Accept': 'application/json',
         },
       })
 
