@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply font-sans;
+  }
+}
+
+:root {
+  --primary: #6750A4;
+  --surface: #FEF7FF;
+}
+
+body {
+  background-color: var(--surface);
+  color: #1D1B20;
+}
+
+@layer utilities {
+  .font-sans {
+    font-family: var(--font-plus-jakarta), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  }
+}
+
