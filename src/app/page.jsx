@@ -188,7 +188,74 @@ export default function Home() {
               </motion.div>
             )}
 
-            {status === 'success' && data && (
+            {status === 'success' && data && data.blocked && (
+              <motion.div
+                key="blocked"
+                initial={{ opacity: 0, y: 50, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                className="w-full max-w-4xl bg-surface-container rounded-[2.5rem] md:rounded-[4rem] overflow-hidden shadow-[0_32px_64px_-16px_rgba(0,0,0,0.15)] dark:shadow-black/50 flex flex-col border border-outline-variant/10"
+              >
+                <div className="flex flex-col lg:flex-row">
+                  <div className="w-full lg:w-1/2 relative aspect-video lg:aspect-auto">
+                    {data.thumbnail ? (
+                      <img
+                        src={data.thumbnail}
+                        alt={data.title || ''}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-surface-container-highest flex items-center justify-center">
+                        <span className="text-6xl">▶</span>
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                    <div className={`absolute top-4 left-4 md:top-8 md:left-8 px-4 md:px-6 py-1.5 md:py-2.5 rounded-full text-[10px] md:text-xs font-black uppercase tracking-[0.25em] shadow-2xl ${getPlatformColor(data.platform)}`}>
+                      {data.platform}
+                    </div>
+                  </div>
+
+                  <div className="w-full lg:w-1/2 p-6 md:p-12 lg:p-16 flex flex-col gap-6 md:gap-10 justify-between bg-surface-container-high/50">
+                    <div className="space-y-4 md:space-y-6">
+                      <div className="space-y-3 md:space-y-4">
+                        <h3 className="text-2xl md:text-4xl font-black leading-[1.1] tracking-tighter text-surface-on line-clamp-3">
+                          {data.title}
+                        </h3>
+                        {data.uploader && (
+                          <a
+                            href={data.uploader_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-lg md:text-2xl text-primary font-black hover:underline flex items-center gap-2 md:gap-3 group"
+                          >
+                            <span className="w-2 md:w-3 h-2 md:h-3 rounded-full bg-primary group-hover:scale-150 transition-transform shadow-sm shadow-primary/40" />
+                            {data.uploader}
+                          </a>
+                        )}
+                      </div>
+
+                      <div className="p-4 md:p-6 rounded-2xl md:rounded-[2rem] bg-tertiary-container text-tertiary-onContainer border border-tertiary/20 flex gap-3 md:gap-4 items-start">
+                        <span className="text-xl md:text-2xl">⚠</span>
+                        <p className="text-sm md:text-base font-bold leading-relaxed">
+                          {data.blocked_message}
+                        </p>
+                      </div>
+                    </div>
+
+                    <a
+                      href={url || data.uploader_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-3 md:gap-4 py-5 md:py-8 rounded-2xl md:rounded-[2.5rem] bg-tertiary text-tertiary-on font-black text-lg md:text-2xl shadow-2xl shadow-tertiary/30 hover:shadow-tertiary/50 hover:-translate-y-1 transition-all active:scale-95 active:translate-y-0"
+                    >
+                      OPEN ON SOURCE
+                      <span className="text-xl md:text-3xl">↗</span>
+                    </a>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {status === 'success' && data && !data.blocked && (
               <motion.div
                 key="success"
                 initial={{ opacity: 0, y: 50, scale: 0.95 }}
