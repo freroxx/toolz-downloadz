@@ -52,15 +52,33 @@ export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const target = searchParams.get('url');
   const name = safeFilename(searchParams.get('name'));
+  const headersB64 = searchParams.get('headers');
 
   if (!target || !ALLOWED_HOST_RE.test(target) || !hostAllowed(target)) {
     return NextResponse.json({ detail: 'Invalid download URL' }, { status: 400 });
   }
 
   const upstreamHeaders = new Headers();
-  upstreamHeaders.set('User-Agent',
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36');
   upstreamHeaders.set('Accept', '*/*');
+  upstreamHeaders.set('Connection', 'keep-alive');
+
+  // Echo exact request headers from the extractor (required by CDN signatures).
+  if (headersB64) {
+    try {
+      const decoded = JSON.parse(decodeURIComponent(escape(atob(headersB64))));
+      if (decoded && typeof decoded === 'object') {
+        for (const [k, v] of Object.entries(decoded)) {
+          if (k && v != null) upstreamHeaders.set(k, String(v));
+        }
+      }
+    } catch {
+      // fall back to the defaults below if provided headers fail to parse
+    }
+  }
+  if (!upstreamHeaders.has('User-Agent')) {
+    upstreamHeaders.set('User-Agent',
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36');
+  }
 
   const range = request.headers.get('range');
   if (range) upstreamHeaders.set('Range', range);

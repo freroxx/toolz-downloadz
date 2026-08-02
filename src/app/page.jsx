@@ -84,7 +84,13 @@ export default function Home() {
     if (!raw) return '#'
     const ext = fmt ? fmt.ext : (data?.ext || 'mp4')
     const name = `${safeName(data?.title)}.${ext}` || 'media'
-    return `/api/download?url=${encodeURIComponent(raw)}&name=${encodeURIComponent(name)}`
+    const headers = fmt ? fmt.headers : (data?.download_headers || {})
+    const params = new URLSearchParams({ url: raw, name })
+    if (headers && Object.keys(headers).length > 0) {
+      // unicode-safe base64 so the proxy can echo yt-dlp's exact request headers.
+      params.set('headers', btoa(unescape(encodeURIComponent(JSON.stringify(headers)))))
+    }
+    return `/api/download?${params.toString()}`
   }
 
   // Build a quality-ready list combining best, video and audio formats.
@@ -95,6 +101,7 @@ export default function Home() {
       kind: 'video',
       url: f.url,
       ext: f.ext || 'mp4',
+      headers: f.headers || {},
       label: `${f.resolution || 'Video'}`,
       detail: (f.acodec && f.acodec !== 'none' ? 'with audio' : 'video only') +
         (f.filesize ? ` · ${formatBytes(f.filesize)}` : ''),
@@ -104,6 +111,7 @@ export default function Home() {
       kind: 'audio',
       url: f.url,
       ext: f.ext || 'mp3',
+      headers: f.headers || {},
       label: `${(f.resolution !== 'unknown' ? f.resolution : f.ext || 'audio').toUpperCase()} audio`,
       detail: f.filesize ? formatBytes(f.filesize) : '',
     }))
