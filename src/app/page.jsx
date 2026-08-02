@@ -88,62 +88,68 @@ export default function Home() {
         </div>
       </nav>
 
-      <main className="pt-28 pb-20 px-4 max-w-5xl mx-auto flex flex-col items-center gap-10 md:gap-16">
+      <main className="pt-24 pb-20 px-4 max-w-5xl mx-auto flex flex-col items-center gap-10 md:gap-16">
         {/* Hero Section */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center space-y-6 md:space-y-8"
+          className="text-center space-y-4 md:space-y-6"
         >
-          <h1 className="text-5xl md:text-8xl lg:text-9xl font-black tracking-tighter text-primary leading-[0.9] filter drop-shadow-sm">
+          <h1 className="text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter text-primary leading-[0.85] filter drop-shadow-sm">
             Toolz<br />Downloadz
           </h1>
-          <p className="text-lg md:text-2xl text-surface-on-variant font-medium max-w-2xl mx-auto opacity-90 leading-relaxed px-4">
-            The ultimate media downloader for Material 3 Expressive. High-performance, secure, and beautiful.
+          <p className="text-base md:text-2xl text-surface-on-variant font-medium max-w-2xl mx-auto opacity-90 leading-relaxed px-6">
+            High-performance media downloader for the modern web.
           </p>
         </motion.div>
 
-        {/* Hero Search Input (Large Pill) */}
-        <div className="w-full flex flex-col items-center gap-8">
+        {/* Hero Search Input (Mobile Optimized) */}
+        <div className="w-full flex flex-col items-center gap-10">
           <motion.form
             onSubmit={handleExtract}
             className="w-full relative group max-w-3xl"
-            initial={{ scale: 0.95, opacity: 0 }}
+            initial={{ scale: 0.98, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.1, type: 'spring', damping: 15 }}
+            transition={{ delay: 0.1 }}
           >
-            <div className="relative flex items-center">
+            <div className="relative flex flex-col md:flex-row items-center gap-4">
               <input
                 type="text"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 placeholder="Paste link here..."
-                className="w-full pl-6 pr-32 md:pl-10 md:pr-44 py-6 md:py-9 rounded-full bg-surface-bright text-surface-on border-4 border-transparent focus:border-primary/20 focus:bg-surface-bright focus:shadow-[0_0_80px_-20px_rgba(103,80,164,0.15)] outline-none text-lg md:text-2xl transition-all placeholder:text-surface-on-variant/30 shadow-2xl dark:shadow-black/40"
+                className="w-full pl-6 pr-6 md:pr-44 py-5 md:py-9 rounded-[2rem] md:rounded-full bg-surface-bright text-surface-on border-4 border-transparent focus:border-primary/20 focus:bg-surface-bright outline-none text-lg md:text-2xl transition-all placeholder:text-surface-on-variant/30 shadow-xl dark:shadow-black/40"
               />
               <button
                 disabled={status === 'loading'}
-                className="absolute right-2 md:right-4 px-6 md:px-12 py-3 md:py-5 rounded-full bg-primary text-primary-on font-black text-base md:text-lg hover:scale-[1.05] active:scale-95 disabled:opacity-50 transition-all shadow-xl shadow-primary/30"
+                className="w-full md:w-auto md:absolute md:right-4 px-10 py-4 md:py-5 rounded-[2rem] md:rounded-full bg-primary text-primary-on font-black text-lg hover:scale-[1.02] active:scale-95 disabled:opacity-50 transition-all shadow-lg"
               >
                 {status === 'loading' ? '...' : 'Extract'}
               </button>
             </div>
           </motion.form>
 
-          {/* Supported Platforms */}
+          {/* Supported Platforms (Mobile Friendly) */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="flex flex-wrap justify-center gap-3 md:gap-6 opacity-60"
+            className="w-full max-w-2xl px-4"
           >
-            {['YouTube', 'TikTok', 'Instagram', 'Twitter', 'Reddit'].map((platform) => (
-              <span key={platform} className="text-sm md:text-base font-black uppercase tracking-widest">{platform}</span>
-            ))}
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap justify-center items-center gap-3 md:gap-6">
+              {['YouTube', 'TikTok', 'Instagram', 'Twitter (X)', 'Reddit'].map((platform) => (
+                <div key={platform} className="flex items-center justify-center px-4 py-3 rounded-2xl bg-surface-container-high border border-outline-variant/10 shadow-sm">
+                  <span className="text-[9px] md:text-xs font-black uppercase tracking-widest text-surface-on-variant opacity-70 text-center">
+                    {platform}
+                  </span>
+                </div>
+              ))}
+            </div>
           </motion.div>
         </div>
 
         {/* Result Area */}
-        <div className="w-full flex justify-center min-h-[300px] md:min-h-[500px]">
+        <div className="w-full flex justify-center min-h-[300px]">
           <AnimatePresence mode="wait">
             {status === 'loading' && (
               <motion.div
