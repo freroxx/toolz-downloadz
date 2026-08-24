@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+export const maxDuration = 30;
 
 const ALLOWED_HOST_RE = /^https?:\/\//i;
 const SAFE_NAME_RE = /[^\p{L}\p{N} ._\-\u2013\u2014]/gu;

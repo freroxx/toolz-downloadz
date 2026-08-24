@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+export const maxDuration = 30; // Vercel serverless max — keeps proxy alive while API extracts
 
 function getBackend() {
   const apiUrl = (process.env.API_URL || 'https://toolz-downloadz-api.vercel.app').replace(/\/$/, '');
