@@ -207,6 +207,29 @@ export default function Home() {
               ) : (
                 <>
                   {/* Quality picker */}
+                  {(data.quality_options || []).length > 0 && (
+                    <div className="px-4 pt-4 space-y-2">
+                      <p className="text-[10px] font-black uppercase tracking-[0.25em] text-surface-on-variant/50">Server-side quality · converted on demand</p>
+                      <div className="flex flex-wrap gap-2">
+                        {data.quality_options.map((q) => (
+                          <button key={q.f}
+                            onClick={() => {
+                              const ext = q.f.endsWith('mp3') ? 'mp3' : 'mp4'
+                              const params = new URLSearchParams({
+                                u: data.original_url || url,
+                                f: q.f,
+                                n: `${safeName(data.title || 'media')}.${ext}`,
+                              })
+                              window.location.href = `/api/download?${params}`
+                            }}
+                            className="px-4 py-2.5 rounded-xl bg-secondary-container text-secondary-onContainer border border-outline-variant/15 font-black text-sm hover:bg-secondary hover:text-secondary-on transition"
+                            title={`Converted on our servers — takes ~10-30s`}>
+                            {q.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   {all.length > 1 && (
                     <div className="px-4 pt-2 space-y-3">
                       <p className="text-[10px] font-black uppercase tracking-[0.25em] text-surface-on-variant/50">Quality</p>
