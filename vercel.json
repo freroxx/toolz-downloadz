@@ -1,12 +1,4 @@
 {
   "framework": "nextjs",
-  "regions": ["iad1"],
-  "functions": {
-    "src/app/api/extract/route.js": {
-      "maxDuration": 30
-    },
-    "src/app/api/download/route.js": {
-      "maxDuration": 30
-    }
-  }
+  "regions": ["iad1"]
 }
