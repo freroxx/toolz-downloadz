@@ -196,6 +196,13 @@ export default function Home() {
               {data.blocked ? (
                 <div className="p-6 m-4 rounded-2xl bg-tertiary-container text-tertiary-onContainer text-sm font-bold leading-relaxed">
                   ⚠ {data.blocked_message}
+                  {data.original_url && (
+                    <a href={`https://cobalt.tools/#u=${encodeURIComponent(data.original_url)}`}
+                       target="_blank" rel="noopener noreferrer"
+                       className="inline-flex items-center gap-1 mt-2 underline font-black hover:opacity-80">
+                      or download in your browser via cobalt.tools ↗
+                    </a>
+                  )}
                 </div>
               ) : (
                 <>
