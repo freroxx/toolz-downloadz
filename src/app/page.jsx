@@ -62,9 +62,8 @@ export default function Home() {
     if (!data || data.blocked) return { best: null, video: [], audio: [] }
     const mk = (f, i, kind) => ({
       key: `${kind[0]}${i}`,
-      url: f.url,
+      fid: f.format_id,
       ext: f.ext || (kind === 'audio' ? 'mp3' : 'mp4'),
-      headers: f.headers || {},
       label: f.resolution !== 'unknown' ? f.resolution : f.ext?.toUpperCase() || kind,
       detail:
         (kind === 'video' && f.acodec && f.acodec !== 'none' ? '' : kind === 'video' ? 'no audio · ' : '') +
@@ -72,7 +71,7 @@ export default function Home() {
     })
     return {
       best: data.download_url
-        ? { key: 'best', url: data.download_url, ext: data.ext || 'mp4', headers: data.download_headers || {}, label: 'Best quality', detail: 'recommended' }
+        ? { key: 'best', fid: 'best', ext: data.ext || 'mp4', label: 'Best quality', detail: 'recommended' }
         : null,
       video: (data.formats?.video || []).map((f, i) => mk(f, i, 'video')),
       audio: (data.formats?.audio || []).map((f, i) => mk(f, i, 'audio')),
@@ -85,9 +84,13 @@ export default function Home() {
 
   const download = () => {
     if (!active || !data) return
-    const p = new URLSearchParams({ url: active.url, name: `${safeName(data.title || 'media')}.${active.ext}` })
-    if (Object.keys(active.headers).length)
-      p.set('headers', btoa(unescape(encodeURIComponent(JSON.stringify(active.headers)))))
+    // API streams the media itself — its IP signed the CDN URL, so this works
+    // for YouTube/TikTok where a separate proxy would get 403.
+    const p = new URLSearchParams({
+      u: data.original_url || url,
+      f: active.fid || 'best',
+      n: `${safeName(data.title || 'media')}.${active.ext}`,
+    })
     window.location.href = `/api/download?${p}`
   }
 
