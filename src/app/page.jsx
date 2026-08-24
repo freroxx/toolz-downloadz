@@ -94,16 +94,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-surface-dim text-surface-on selection:bg-primary/30 font-sans">
       {/* Top bar */}
-      <nav className="fixed top-0 inset-x-0 z-50 px-5 py-3.5 flex justify-between items-center bg-surface-bright/80 backdrop-blur-xl border-b border-outline-variant/30">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center text-primary-on font-black shadow-md shadow-primary/20">TD</div>
-          <span className="font-extrabold text-lg tracking-tight">Toolz Downloadz</span>
-        </div>
-        <a href="https://github.com/freroxx" target="_blank"
-          className="px-5 py-2 rounded-full bg-surface-container-highest text-sm font-bold border border-outline-variant/20 hover:bg-primary/10 transition">
-          GitHub
-        </a>
-      </nav>
+      
 
       <main className="pt-28 pb-16 px-4 max-w-2xl mx-auto flex flex-col items-center gap-8">
         {/* Hero */}
