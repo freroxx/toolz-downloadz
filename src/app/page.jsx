@@ -313,7 +313,7 @@ export default function Home() {
       </main>
 
       <footer className="pb-10 text-center text-xs font-black tracking-[0.4em] uppercase text-surface-on-variant/25">
-        Toolz Downloadz Engine v4 · TikTok + Instagram
+        Toolz Downloadz v4.1
       </footer>
     </div>
   )
