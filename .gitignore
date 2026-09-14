@@ -1,7 +1,22 @@
-.env
-.idea/
+# dependencies
 node_modules/
+
+# next.js
 .next/
+out/
+
+# env (never commit secrets — use .env.example as the template)
+.env
+.env*.local
+
+# build output
 dist/
 build/
+
+# system / ide
 .DS_Store
+.idea/
+.vscode/
+
+# vercel
+.vercel

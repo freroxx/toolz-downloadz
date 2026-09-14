@@ -8,8 +8,14 @@ const plusJakarta = Plus_Jakarta_Sans({
 })
 
 export const metadata = {
-  title: 'Toolz Downloadz | M3 Expressive Downloader',
-  description: 'A modern, expressive media extraction web app built with Material 3 principles.',
+  title: 'Toolz Downloadz — TikTok & Instagram Downloader',
+  description: 'Paste a TikTok or Instagram link and get the video. Fast, free, no login. Built with Next.js + a FastAPI extraction engine.',
+  metadataBase: new URL('https://toolz-downloadz.vercel.app'),
+  openGraph: {
+    title: 'Toolz Downloadz — TikTok & Instagram Downloader',
+    description: 'Paste a link. Get the video. Thatʼs it.',
+    type: 'website',
+  },
 }
 
 export default function RootLayout({ children }) {

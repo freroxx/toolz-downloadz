@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-// YouTube/TikTok sign media URLs to the extracting server's IP, so we can't
+// TikTok/Instagram sign media URLs to the extracting server's IP, so we can't
 // fetch them from this separate function. Instead we 307-redirect to the API's
 // own /api/download which resolves (cache-first) and streams from the SAME
 // instance that extracted — keeping the signature valid.

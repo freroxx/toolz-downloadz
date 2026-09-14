@@ -3,9 +3,8 @@
 import { useState, useEffect } from 'react'
 
 const PLATFORMS = [
-  { id: 'youtube', name: 'YouTube', style: 'bg-[#FF0000] text-white' },
   { id: 'tiktok', name: 'TikTok', style: 'bg-black text-white' },
-  { id: 'instagram', name: 'Instagram Reels', style: 'bg-gradient-to-tr from-[#F58529] via-[#DD2A7B] to-[#8134AF] text-white' },
+  { id: 'instagram', name: 'Instagram', style: 'bg-gradient-to-tr from-[#F58529] via-[#DD2A7B] to-[#8134AF] text-white' },
 ]
 
 const platformStyle = (p) =>
@@ -85,7 +84,7 @@ export default function Home() {
   const download = () => {
     if (!active || !data) return
     // API streams the media itself — its IP signed the CDN URL, so this works
-    // for YouTube/TikTok where a separate proxy would get 403.
+    // for TikTok where a separate proxy would get 403.
     const p = new URLSearchParams({
       u: data.original_url || url,
       f: active.fid || 'best',
@@ -102,7 +101,7 @@ export default function Home() {
           <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center text-primary-on font-black shadow-md shadow-primary/20">TD</div>
           <span className="font-extrabold text-lg tracking-tight">Toolz Downloadz</span>
         </div>
-        <a href="https://github.com/freroxx" target="_blank"
+        <a href="https://github.com/freroxx/toolz-downloadz" target="_blank" rel="noopener noreferrer"
           className="px-5 py-2 rounded-full bg-surface-container-highest text-sm font-bold border border-outline-variant/20 hover:bg-primary/10 transition">
           GitHub
         </a>
@@ -131,7 +130,7 @@ export default function Home() {
           <input
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            placeholder="Paste YouTube / TikTok / Instagram link…"
+            placeholder="Paste TikTok / Instagram link…"
             className="w-full pl-6 pr-32 py-5 rounded-full bg-surface-bright text-lg border-4 border-transparent focus:border-primary/25 outline-none placeholder:text-surface-on-variant/40 shadow-lg dark:shadow-black/40 transition-all"
           />
           <button
@@ -196,40 +195,9 @@ export default function Home() {
               {data.blocked ? (
                 <div className="p-6 m-4 rounded-2xl bg-tertiary-container text-tertiary-onContainer text-sm font-bold leading-relaxed">
                   ⚠ {data.blocked_message}
-                  {data.original_url && (
-                    <a href={`https://cobalt.tools/#u=${encodeURIComponent(data.original_url)}`}
-                       target="_blank" rel="noopener noreferrer"
-                       className="inline-flex items-center gap-1 mt-2 underline font-black hover:opacity-80">
-                      or download in your browser via cobalt.tools ↗
-                    </a>
-                  )}
                 </div>
               ) : (
                 <>
-                  {/* Quality picker */}
-                  {(data.quality_options || []).length > 0 && (
-                    <div className="px-4 pt-4 space-y-2">
-                      <p className="text-[10px] font-black uppercase tracking-[0.25em] text-surface-on-variant/50">Server-side quality · converted on demand</p>
-                      <div className="flex flex-wrap gap-2">
-                        {data.quality_options.map((q) => (
-                          <button key={q.f}
-                            onClick={() => {
-                              const ext = q.f.endsWith('mp3') ? 'mp3' : 'mp4'
-                              const params = new URLSearchParams({
-                                u: data.original_url || url,
-                                f: q.f,
-                                n: `${safeName(data.title || 'media')}.${ext}`,
-                              })
-                              window.location.href = `/api/download?${params}`
-                            }}
-                            className="px-4 py-2.5 rounded-xl bg-secondary-container text-secondary-onContainer border border-outline-variant/15 font-black text-sm hover:bg-secondary hover:text-secondary-on transition"
-                            title={`Converted on our servers — takes ~10-30s`}>
-                            {q.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                   {all.length > 1 && (
                     <div className="px-4 pt-2 space-y-3">
                       <p className="text-[10px] font-black uppercase tracking-[0.25em] text-surface-on-variant/50">Quality</p>
@@ -262,7 +230,7 @@ export default function Home() {
       </main>
 
       <footer className="pb-10 text-center text-xs font-black tracking-[0.4em] uppercase text-surface-on-variant/25">
-        Toolz Downloadz Engine v3
+        Toolz Downloadz Engine v4 · TikTok + Instagram
       </footer>
     </div>
   )
