@@ -10,6 +10,57 @@ const PLATFORMS = [
 const platformStyle = (p) =>
   PLATFORMS.find((x) => x.id === p)?.style ?? 'bg-primary text-primary-on'
 
+const THEMES = ['auto', 'light', 'dark']
+
+function applyTheme(t) {
+  const mq = window.matchMedia('(prefers-color-scheme: dark)')
+  document.documentElement.classList.toggle('dark', t === 'dark' || (t === 'auto' && mq.matches))
+}
+
+function ThemeToggle() {
+  const [theme, setTheme] = useState('auto')
+
+  useEffect(() => {
+    const stored = localStorage.getItem('toolz-theme') || 'auto'
+    setTheme(stored)
+    applyTheme(stored)
+    const mq = window.matchMedia('(prefers-color-scheme: dark)')
+    const followOS = () => {
+      if ((localStorage.getItem('toolz-theme') || 'auto') === 'auto') applyTheme('auto')
+    }
+    mq.addEventListener('change', followOS)
+    return () => mq.removeEventListener('change', followOS)
+  }, [])
+
+  const cycle = () => {
+    const next = THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length]
+    setTheme(next)
+    localStorage.setItem('toolz-theme', next)
+    applyTheme(next)
+  }
+
+  return (
+    <button onClick={cycle} title={`Theme: ${theme} (click to change)`} aria-label={`Theme: ${theme}`}
+      className="w-10 h-10 grid place-items-center rounded-full bg-surface-container-highest border border-outline-variant/20 hover:bg-primary/10 transition">
+      {theme === 'light' ? (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+        </svg>
+      ) : theme === 'dark' ? (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z" />
+        </svg>
+      ) : (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <rect x="2" y="4" width="20" height="13" rx="2" />
+          <path d="M8 21h8m-4-4v4" />
+        </svg>
+      )}
+    </button>
+  )
+}
+
 export default function Home() {
   const [url, setUrl] = useState('')
   const [status, setStatus] = useState('idle')
@@ -17,6 +68,8 @@ export default function Home() {
   const [error, setError] = useState('')
   const [selected, setSelected] = useState('best')
   const [audioOnly, setAudioOnly] = useState(false)
+  const [ladderLoading, setLadderLoading] = useState(false)
+  const [ladderError, setLadderError] = useState('')
 
   useEffect(() => {
     const q = new URLSearchParams(window.location.search).get('url')
@@ -30,6 +83,24 @@ export default function Home() {
     return detail || `Request failed (${status})`
   }
 
+  const fetchExtract = async (extra, timeoutMs = 28000) => {
+    const params = new URLSearchParams({ url, ...(extra || {}) })
+    const ctrl = new AbortController()
+    const timer = setTimeout(() => ctrl.abort(), timeoutMs)
+    try {
+      const res = await fetch(`/api/extract?${params}`, { signal: ctrl.signal })
+      const json = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(friendlyError(res.status, json?.detail))
+      return json
+    } catch (err) {
+      throw err.name === 'AbortError'
+        ? new Error('Taking too long — the servers are busy. Try again.')
+        : err
+    } finally {
+      clearTimeout(timer)
+    }
+  }
+
   const extract = async (e, mode) => {
     e?.preventDefault()
     const wantAudio = mode ?? audioOnly
@@ -37,25 +108,31 @@ export default function Home() {
     setStatus('loading')
     setError('')
     setData(null)
-    const ctrl = new AbortController()
-    const timer = setTimeout(() => ctrl.abort(), 28000)
+    setLadderError('')
     try {
       window.history.replaceState(null, '', `?url=${encodeURIComponent(url)}`)
-      const params = new URLSearchParams({ url })
-      if (wantAudio) params.set('audio_only', 'true')
-      const res = await fetch(`/api/extract?${params}`, { signal: ctrl.signal })
-      const json = await res.json().catch(() => null)
-      if (!res.ok) throw new Error(friendlyError(res.status, json?.detail))
+      const json = await fetchExtract(wantAudio ? { audio_only: 'true' } : {})
       setData(json)
       setSelected('best')
       setStatus('success')
     } catch (err) {
-      setError(err.name === 'AbortError'
-        ? 'Taking too long — the servers are busy. Try again.'
-        : err.message || 'Something went wrong')
+      setError(err.message || 'Something went wrong')
       setStatus('error')
+    }
+  }
+
+  const loadLadder = async () => {
+    if (ladderLoading || !data || status === 'loading') return
+    setLadderLoading(true)
+    setLadderError('')
+    try {
+      const json = await fetchExtract({ ladder: 'true' }, 45000)
+      setData(json)
+      setSelected('best')
+    } catch (err) {
+      setLadderError(err.message || 'Full quality list unavailable.')
     } finally {
-      clearTimeout(timer)
+      setLadderLoading(false)
     }
   }
 
@@ -85,23 +162,64 @@ export default function Home() {
   const withSound = (f) =>
     f.has_audio === true || (f.has_audio == null && f.acodec && f.acodec !== 'none')
 
+  // Short display names for observed codecs. Unmappable values are omitted,
+  // never shown raw — a codec tag on screen means "observed in the file".
+  const CODECS = {
+    h264: 'H.264', avc1: 'H.264',
+    h265: 'HEVC', hev1: 'HEVC', hevc: 'HEVC', bytevc1: 'HEVC',
+    aac: 'AAC', mp4a: 'AAC', mp3: 'MP3', opus: 'Opus',
+  }
+  const codecName = (c) => {
+    if (!c || c === 'none') return null
+    return CODECS[String(c).toLowerCase().split('.')[0]] || null
+  }
+
+  // p-labels come from observed height only: "1080p" states lines in the file.
+  const pLabel = (h) => (h ? `${h}p${h >= 720 ? ' HD' : ''}` : null)
+
   const options = () => {
     if (!data || data.blocked) return { best: null, withSound: [], videoOnly: [], audio: [] }
-    const mk = (f, i, kind) => ({
-      key: `${kind[0]}${i}`,
-      fid: f.format_id,
-      ext: f.ext || (kind === 'audio' ? 'mp3' : 'mp4'),
-      label: f.resolution && f.resolution !== 'unknown' ? f.resolution : (f.ext?.toUpperCase() || kind),
-      size: f.filesize ? fmtBytes(f.filesize) : 'size unknown',
-    })
+    const mk = (f, i, kind) => {
+      const dims = f.width && f.height ? `${f.width}×${f.height}` : null
+      const sub = [
+        dims,
+        f.filesize ? fmtBytes(f.filesize) : 'size unknown',
+        codecName(f.vcodec),
+        f.fps ? `${f.fps}fps` : null,
+        f.ip_free ? 'works anywhere' : null,
+      ].filter(Boolean).join(' · ')
+      return {
+        key: `${kind[0]}${i}`,
+        fid: f.format_id,
+        url: f.url,
+        ext: f.ext || (kind === 'audio' ? 'mp3' : 'mp4'),
+        label: kind === 'audio'
+          ? (codecName(f.acodec) || 'Audio')
+          : (pLabel(f.height) || (f.resolution && f.resolution !== 'unknown' ? f.resolution : (f.ext?.toUpperCase() || kind))),
+        size: f.filesize ? fmtBytes(f.filesize) : 'size unknown',
+        sub,
+      }
+    }
     const videos = data.formats?.video || []
+    const withSoundRows = videos.filter(withSound).map((f, i) => mk(f, i, 'video'))
+    const videoOnlyRows = videos.filter((f) => !withSound(f)).map((f, i) => mk(f, i, 'video'))
+    const audioRows = (data.formats?.audio || []).map((f, i) => mk(f, i, 'audio'))
+    const match = [...withSoundRows, ...videoOnlyRows, ...audioRows]
+      .find((r) => r.url && r.url === data.download_url)
     return {
+      // Best names what it actually is, so the default quality is never a mystery.
       best: data.download_url
-        ? { key: 'best', fid: 'best', ext: data.ext || (audioOnly ? 'mp3' : 'mp4'), label: audioOnly ? 'Best audio' : 'Best (video + audio)' }
+        ? {
+            key: 'best', fid: 'best', url: data.download_url,
+            ext: data.ext || (audioOnly ? 'mp3' : 'mp4'),
+            label: match?.label || (audioOnly ? 'Best audio' : 'Best (video + audio)'),
+            size: match?.size || '',
+            sub: match?.sub || '',
+          }
         : null,
-      withSound: videos.filter(withSound).map((f, i) => mk(f, i, 'video')),
-      videoOnly: videos.filter((f) => !withSound(f)).map((f, i) => mk(f, i, 'video')),
-      audio: (data.formats?.audio || []).map((f, i) => mk(f, i, 'audio')),
+      withSound: withSoundRows,
+      videoOnly: videoOnlyRows,
+      audio: audioRows,
     }
   }
 
@@ -140,19 +258,22 @@ export default function Home() {
         <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-44 overflow-y-auto pr-1">
           {rows.map((f) => (
             <button key={f.key} onClick={() => setSelected(f.key)}
+              title={f.sub}
               className={`px-3 py-2.5 rounded-xl border-2 text-center transition ${
                 selected === f.key
                   ? 'bg-primary text-primary-on border-primary shadow'
                   : 'bg-surface-bright border-outline-variant/15 hover:border-primary/40'
               }`}>
               <div className="font-black text-sm truncate">{f.label}</div>
-              <div className="text-[9px] font-bold opacity-60 truncate">{f.size}</div>
+              <div className="text-[9px] font-bold opacity-60 truncate">{f.sub}</div>
             </button>
           ))}
         </div>
       </div>
     )
   )
+
+  const showLadderBtn = data?.platform === 'tiktok' && data?.ladder === 'fast' && !audioOnly && !data?.blocked
 
   return (
     <div className="min-h-screen bg-surface-dim text-surface-on selection:bg-primary/30 font-sans">
@@ -162,10 +283,13 @@ export default function Home() {
           <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center text-primary-on font-black shadow-md shadow-primary/20">TD</div>
           <span className="font-extrabold text-lg tracking-tight">Toolz Downloadz</span>
         </div>
-        <a href="https://github.com/freroxx/toolz-downloadz" target="_blank" rel="noopener noreferrer"
-          className="px-5 py-2 rounded-full bg-surface-container-highest text-sm font-bold border border-outline-variant/20 hover:bg-primary/10 transition">
-          GitHub
-        </a>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <a href="https://github.com/freroxx/toolz-downloadz" target="_blank" rel="noopener noreferrer"
+            className="px-5 py-2 rounded-full bg-surface-container-highest text-sm font-bold border border-outline-variant/20 hover:bg-primary/10 transition">
+            GitHub
+          </a>
+        </div>
       </nav>
 
       <main className="pt-28 pb-16 px-4 max-w-2xl mx-auto flex flex-col items-center gap-8">
@@ -294,14 +418,30 @@ export default function Home() {
                       ))}
                     </div>
                   )}
+                  {showLadderBtn && (
+                    <div className="px-4 pt-3 text-center space-y-1">
+                      <button onClick={loadLadder} disabled={ladderLoading}
+                        className="px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest bg-surface-bright border border-outline-variant/20 hover:bg-primary/10 disabled:opacity-50 transition">
+                        {ladderLoading ? 'Loading qualities…' : 'More qualities'}
+                      </button>
+                      {ladderError && (
+                        <p className="text-[10px] font-bold text-error">{ladderError}</p>
+                      )}
+                    </div>
+                  )}
+                  {data.ladder === 'full' && (
+                    <p className="px-4 pt-3 text-center text-[10px] font-bold text-surface-on-variant/50">
+                      H.264 plays everywhere · HEVC is smaller but older devices may not play it
+                    </p>
+                  )}
                   <div className="p-4">
                     <button onClick={download} disabled={!active}
                       className="w-full py-4 rounded-2xl bg-primary text-primary-on font-black text-lg shadow-lg shadow-primary/25 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 transition-all">
                       DOWNLOAD ↓ <span className="opacity-70 text-sm font-bold">{active?.ext.toUpperCase()}</span>
                     </button>
-                    {selected !== 'best' && active && (
+                    {active && (active.sub || active.size) && (
                       <p className="pt-2 text-center text-xs font-bold text-surface-on-variant/60">
-                        {active.label} · {active.size}
+                        {[active.label, active.sub || active.size].filter(Boolean).join(' · ')}
                       </p>
                     )}
                   </div>
@@ -313,7 +453,7 @@ export default function Home() {
       </main>
 
       <footer className="pb-10 text-center text-xs font-black tracking-[0.4em] uppercase text-surface-on-variant/25">
-        Toolz Downloadz Engine v4 · TikTok + Instagram
+        TikTok and Instagram Downloader
       </footer>
     </div>
   )

@@ -11,6 +11,7 @@ export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const url = searchParams.get('url');
   const audioOnly = searchParams.get('audio_only');
+  const ladder = searchParams.get('ladder');
 
   if (!url) {
     return NextResponse.json({ detail: 'Missing ?url=' }, { status: 400 });
@@ -21,6 +22,7 @@ export async function GET(request) {
 
   const params = new URLSearchParams({ url });
   if (audioOnly) params.set('audio_only', 'true');
+  if (ladder) params.set('ladder', 'true');
 
   try {
     const res = await fetch(`${API_URL}/api/extract?${params}`, {
