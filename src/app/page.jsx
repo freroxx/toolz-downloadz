@@ -68,8 +68,6 @@ export default function Home() {
   const [error, setError] = useState('')
   const [selected, setSelected] = useState('best')
   const [audioOnly, setAudioOnly] = useState(false)
-  const [ladderLoading, setLadderLoading] = useState(false)
-  const [ladderError, setLadderError] = useState('')
 
   useEffect(() => {
     const q = new URLSearchParams(window.location.search).get('url')
@@ -83,10 +81,10 @@ export default function Home() {
     return detail || `Request failed (${status})`
   }
 
-  const fetchExtract = async (extra, timeoutMs = 28000) => {
+  const fetchExtract = async (extra) => {
     const params = new URLSearchParams({ url, ...(extra || {}) })
     const ctrl = new AbortController()
-    const timer = setTimeout(() => ctrl.abort(), timeoutMs)
+    const timer = setTimeout(() => ctrl.abort(), 28000)
     try {
       const res = await fetch(`/api/extract?${params}`, { signal: ctrl.signal })
       const json = await res.json().catch(() => null)
@@ -108,7 +106,6 @@ export default function Home() {
     setStatus('loading')
     setError('')
     setData(null)
-    setLadderError('')
     try {
       window.history.replaceState(null, '', `?url=${encodeURIComponent(url)}`)
       const json = await fetchExtract(wantAudio ? { audio_only: 'true' } : {})
@@ -118,21 +115,6 @@ export default function Home() {
     } catch (err) {
       setError(err.message || 'Something went wrong')
       setStatus('error')
-    }
-  }
-
-  const loadLadder = async () => {
-    if (ladderLoading || !data || status === 'loading') return
-    setLadderLoading(true)
-    setLadderError('')
-    try {
-      const json = await fetchExtract({ ladder: 'true' }, 45000)
-      setData(json)
-      setSelected('best')
-    } catch (err) {
-      setLadderError(err.message || 'Full quality list unavailable.')
-    } finally {
-      setLadderLoading(false)
     }
   }
 
@@ -273,7 +255,7 @@ export default function Home() {
     )
   )
 
-  const showLadderBtn = data?.platform === 'tiktok' && data?.ladder === 'fast' && !audioOnly && !data?.blocked
+  const showCodecHint = data?.platform === 'tiktok' && data?.ladder === 'full'
 
   return (
     <div className="min-h-screen bg-surface-dim text-surface-on selection:bg-primary/30 font-sans">
@@ -418,18 +400,7 @@ export default function Home() {
                       ))}
                     </div>
                   )}
-                  {showLadderBtn && (
-                    <div className="px-4 pt-3 text-center space-y-1">
-                      <button onClick={loadLadder} disabled={ladderLoading}
-                        className="px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest bg-surface-bright border border-outline-variant/20 hover:bg-primary/10 disabled:opacity-50 transition">
-                        {ladderLoading ? 'Loading qualities…' : 'More qualities'}
-                      </button>
-                      {ladderError && (
-                        <p className="text-[10px] font-bold text-error">{ladderError}</p>
-                      )}
-                    </div>
-                  )}
-                  {data.ladder === 'full' && (
+                  {showCodecHint && (
                     <p className="px-4 pt-3 text-center text-[10px] font-bold text-surface-on-variant/50">
                       H.264 plays everywhere · HEVC is smaller but older devices may not play it
                     </p>
