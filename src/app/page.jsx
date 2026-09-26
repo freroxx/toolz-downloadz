@@ -68,10 +68,21 @@ export default function Home() {
   const [error, setError] = useState('')
   const [selected, setSelected] = useState('best')
   const [audioOnly, setAudioOnly] = useState(false)
+  const [sessionReady, setSessionReady] = useState(false)
 
   useEffect(() => {
     const q = new URLSearchParams(window.location.search).get('url')
     if (q) setUrl(q)
+    const key = 'toolz-downloadz-installation'
+    let installationId = localStorage.getItem(key)
+    if (!installationId) {
+      installationId = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}-${Math.random()}`
+      localStorage.setItem(key, installationId)
+    }
+    fetch('/api/session', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ installation_id: installationId }),
+    }).then((res) => setSessionReady(res.ok)).catch(() => setSessionReady(false))
   }, [])
 
   const friendlyError = (status, detail) => {
@@ -82,6 +93,7 @@ export default function Home() {
   }
 
   const fetchExtract = async (extra) => {
+    if (!sessionReady) throw new Error('Preparing your private download session. Please try again in a moment.')
     const params = new URLSearchParams({ url, ...(extra || {}) })
     const ctrl = new AbortController()
     const timer = setTimeout(() => ctrl.abort(), 28000)
@@ -160,7 +172,7 @@ export default function Home() {
   const pLabel = (h) => (h ? `${h}p${h >= 720 ? ' HD' : ''}` : null)
 
   const options = () => {
-    if (!data || data.blocked) return { best: null, withSound: [], videoOnly: [], audio: [] }
+    if (!data || data.blocked) return { best: null, withSound: [], videoOnly: [], audio: [], images: [] }
     const mk = (f, i, kind) => {
       const dims = f.width && f.height ? `${f.width}×${f.height}` : null
       const sub = [
@@ -171,37 +183,37 @@ export default function Home() {
         f.ip_free ? 'works anywhere' : null,
       ].filter(Boolean).join(' · ')
       return {
-        key: `${kind[0]}${i}`,
-        fid: f.format_id,
-        url: f.url,
+        key: f.id,
+        fid: f.id,
         ext: f.ext || (kind === 'audio' ? 'mp3' : 'mp4'),
         label: kind === 'audio'
           ? (codecName(f.acodec) || 'Audio')
+          : kind === 'image'
+            ? `Photo ${i + 1}`
           : (pLabel(f.height) || (f.resolution && f.resolution !== 'unknown' ? f.resolution : (f.ext?.toUpperCase() || kind))),
         size: f.filesize ? fmtBytes(f.filesize) : 'size unknown',
         sub,
+        thumbnail: f.thumbnail,
       }
     }
-    const videos = data.formats?.video || []
+    const videos = (data.assets || []).filter((asset) => asset.kind === 'video')
     const withSoundRows = videos.filter(withSound).map((f, i) => mk(f, i, 'video'))
     const videoOnlyRows = videos.filter((f) => !withSound(f)).map((f, i) => mk(f, i, 'video'))
-    const audioRows = (data.formats?.audio || []).map((f, i) => mk(f, i, 'audio'))
-    const match = [...withSoundRows, ...videoOnlyRows, ...audioRows]
-      .find((r) => r.url && r.url === data.download_url)
+    const audioRows = (data.assets || []).filter((asset) => asset.kind === 'audio').map((f, i) => mk(f, i, 'audio'))
+    const imageRows = (data.assets || []).filter((asset) => asset.kind === 'image').map((f, i) => mk(f, i, 'image'))
+    const preferred = withSoundRows[0] || videoOnlyRows[0] || audioRows[0]
     return {
-      // Best names what it actually is, so the default quality is never a mystery.
-      best: data.download_url
+      // The first server-ranked native format is the compatible recommendation.
+      best: preferred
         ? {
-            key: 'best', fid: 'best', url: data.download_url,
-            ext: data.ext || (audioOnly ? 'mp3' : 'mp4'),
-            label: match?.label || (audioOnly ? 'Best audio' : 'Best (video + audio)'),
-            size: match?.size || '',
-            sub: match?.sub || '',
+            ...preferred, key: 'best',
+            label: `Recommended · ${preferred.label}`,
           }
         : null,
       withSound: withSoundRows,
       videoOnly: videoOnlyRows,
       audio: audioRows,
+      images: imageRows,
     }
   }
 
@@ -214,23 +226,17 @@ export default function Home() {
     : (opts.withSound.length === 0 ? 'Video' : 'Video only (no sound)')
   const active = opts.best && selected === 'best'
     ? opts.best
-    : [...opts.withSound, ...opts.videoOnly, ...opts.audio].find((f) => f.key === selected) ?? opts.best
+    : [...opts.withSound, ...opts.videoOnly, ...opts.audio, ...opts.images].find((f) => f.key === selected) ?? opts.best
 
-  const downloadAs = (fid, ext) => {
+  const downloadAs = (assetId) => {
     if (!data) return
-    // API streams the media itself — its IP signed the CDN URL, so this works
-    // for TikTok where a separate proxy would get 403.
-    const p = new URLSearchParams({
-      u: data.original_url || url,
-      f: fid || 'best',
-      n: `${safeName(data.title || 'media')}.${ext}`,
-    })
+    const p = new URLSearchParams({ e: data.id, a: assetId })
     window.location.href = `/api/download?${p}`
   }
 
   const download = () => {
     if (!active || !data) return
-    downloadAs(active.fid, active.ext)
+    downloadAs(active.fid)
   }
 
   const QualitySection = ({ title, rows }) => (
@@ -255,7 +261,7 @@ export default function Home() {
     )
   )
 
-  const showCodecHint = data?.platform === 'tiktok' && data?.ladder === 'full'
+  const showCodecHint = opts.videoOnly.length > 0
 
   return (
     <div className="min-h-screen bg-surface-dim text-surface-on selection:bg-primary/30 font-sans">
@@ -297,17 +303,17 @@ export default function Home() {
           <input
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            placeholder="Paste TikTok / Instagram link…"
+            placeholder="Paste a public TikTok or Instagram link…"
             inputMode="url"
             autoComplete="off"
             aria-label="TikTok or Instagram link"
             className="w-full pl-6 pr-32 py-5 rounded-full bg-surface-bright text-lg border-4 border-transparent focus:border-primary/25 outline-none placeholder:text-surface-on-variant/40 shadow-lg dark:shadow-black/40 transition-all"
           />
           <button
-            disabled={status === 'loading'}
+            disabled={status === 'loading' || !sessionReady}
             className="absolute right-2 top-1/2 -translate-y-1/2 px-7 py-3 rounded-full bg-primary text-primary-on font-black hover:brightness-110 active:scale-95 disabled:opacity-50 transition-all shadow"
           >
-            {status === 'loading' ? '…' : 'Get'}
+            {status === 'loading' ? '…' : sessionReady ? 'Get' : '…'}
           </button>
         </form>
 
@@ -392,12 +398,26 @@ export default function Home() {
                     <div className="px-4 pt-2 space-y-2">
                       <p className="text-[10px] font-black uppercase tracking-[0.25em] text-surface-on-variant/50">Audio</p>
                       {opts.audio.map((f) => (
-                        <button key={f.key} onClick={() => downloadAs(f.fid, f.ext)}
+                        <button key={f.key} onClick={() => downloadAs(f.fid)}
                           className="w-full px-4 py-3 rounded-xl bg-surface-bright border-2 border-outline-variant/15 hover:border-primary/40 transition flex justify-between items-center gap-2">
                           <span className="font-black text-sm truncate">{f.label}</span>
                           <span className="text-[10px] font-bold opacity-60 whitespace-nowrap">↓ {f.ext.toUpperCase()} · {f.size}</span>
                         </button>
                       ))}
+                    </div>
+                  )}
+                  {opts.images.length > 0 && (
+                    <div className="px-4 pt-2 space-y-2">
+                      <p className="text-[10px] font-black uppercase tracking-[0.25em] text-surface-on-variant/50">Gallery · save photos individually</p>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {opts.images.map((f) => (
+                          <button key={f.key} onClick={() => downloadAs(f.fid)}
+                            className="rounded-xl overflow-hidden bg-surface-bright border-2 border-outline-variant/15 hover:border-primary/40 transition text-left">
+                            {f.thumbnail && <img src={f.thumbnail} alt="" className="w-full aspect-square object-cover" />}
+                            <span className="block px-3 py-2 text-xs font-black truncate">{f.label} · ↓ {f.ext.toUpperCase()}</span>
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
                   {showCodecHint && (
@@ -408,7 +428,7 @@ export default function Home() {
                   <div className="p-4">
                     <button onClick={download} disabled={!active}
                       className="w-full py-4 rounded-2xl bg-primary text-primary-on font-black text-lg shadow-lg shadow-primary/25 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 transition-all">
-                      DOWNLOAD ↓ <span className="opacity-70 text-sm font-bold">{active?.ext.toUpperCase()}</span>
+                      {data.media_kind === 'gallery' ? 'SELECT A PHOTO ABOVE' : <>DOWNLOAD ↓ <span className="opacity-70 text-sm font-bold">{active?.ext.toUpperCase()}</span></>}
                     </button>
                     {active && (active.sub || active.size) && (
                       <p className="pt-2 text-center text-xs font-bold text-surface-on-variant/60">

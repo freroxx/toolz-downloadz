@@ -3,22 +3,35 @@ import { NextResponse } from 'next/server';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-// TikTok/Instagram sign media URLs to the extracting server's IP, so we can't
-// fetch them from this separate function. Instead we 307-redirect to the API's
-// own /api/download which resolves (cache-first) and streams from the SAME
-// instance that extracted — keeping the signature valid.
 const API_URL = (process.env.API_URL || 'https://toolz-downloadz-api.vercel.app').replace(/\/$/, '');
-const API_KEY = process.env.API_SECRET_KEY || '';
+const SESSION_COOKIE = 'toolz_downloadz_session';
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
-  const u = searchParams.get('u');   // original page URL
-  const f = searchParams.get('f') || 'best';
-  const n = searchParams.get('n') || 'media';
+  const extractionId = searchParams.get('e');
+  const assetId = searchParams.get('a');
+  const token = request.cookies.get(SESSION_COOKIE)?.value;
 
-  if (!u) return NextResponse.json({ detail: 'Missing ?u=' }, { status: 400 });
-  if (!API_KEY) return NextResponse.json({ detail: 'Server misconfigured: API_SECRET_KEY missing' }, { status: 500 });
+  if (!extractionId || !assetId) return NextResponse.json({ detail: 'Missing download asset.' }, { status: 400 });
+  if (!token) return NextResponse.json({ detail: 'Your download session expired. Extract the link again.' }, { status: 401 });
 
-  const target = `${API_URL}/api/download?${new URLSearchParams({ u, f, n, key: API_KEY.trim() })}`;
-  return NextResponse.redirect(target, 307);
+  try {
+    const upstream = await fetch(
+      `${API_URL}/api/v1/extractions/${encodeURIComponent(extractionId)}/assets/${encodeURIComponent(assetId)}/download`,
+      { headers: { authorization: `Bearer ${token}`, range: request.headers.get('range') || '' }, cache: 'no-store' },
+    );
+    if (!upstream.ok && upstream.status !== 206) {
+      const body = await upstream.json().catch(() => null);
+      return NextResponse.json({ detail: body?.detail || 'The download could not be prepared.' }, { status: upstream.status });
+    }
+    const headers = new Headers();
+    for (const name of ['content-disposition', 'content-length', 'content-range', 'content-type', 'accept-ranges', 'cache-control']) {
+      const value = upstream.headers.get(name);
+      if (value) headers.set(name, value);
+    }
+    return new Response(upstream.body, { status: upstream.status, headers });
+  } catch (error) {
+    console.error('[download proxy]', error);
+    return NextResponse.json({ detail: 'Could not start the download. Please retry.' }, { status: 502 });
+  }
 }
