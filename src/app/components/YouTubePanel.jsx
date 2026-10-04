@@ -26,6 +26,8 @@ export default function YouTubePanel({ url }) {
   const [phase, setPhase] = useState('extracting');
   const [ladder, setLadder] = useState(null);
   const [error, setError] = useState('');
+  const [errorCode, setErrorCode] = useState(null); // NETWORK_BLOCKED | STREAMS_REFUSED | null
+  const [errorMeta, setErrorMeta] = useState(null); // public video metadata when streams fail
   const [height, setHeight] = useState(720);
   const [mode, setMode] = useState('merged'); // merged | video | audio
   const [audioFormat, setAudioFormat] = useState('m4a'); // m4a | mp3 | ogg | wav | flac
@@ -49,6 +51,8 @@ export default function YouTubePanel({ url }) {
     abortRef.current = ctrl;
     setPhase('extracting');
     setError('');
+    setErrorCode(null);
+    setErrorMeta(null);
     setLadder(null);
     setProgress(null);
 
@@ -79,6 +83,8 @@ export default function YouTubePanel({ url }) {
       } catch (e) {
         if (cancelled || ctrl.signal.aborted) return;
         setError(e.message || 'Extraction failed.');
+        setErrorCode(e.code || null);
+        setErrorMeta(e.meta || null);
         setPhase('error');
       }
     })();
@@ -222,8 +228,24 @@ export default function YouTubePanel({ url }) {
       <div className="w-full p-8 rounded-[2rem] bg-error-container text-error-onContainer text-center space-y-4 animate-[fadein_.3s_ease]">
         <div className="text-4xl">⚠</div>
         <h3 className="font-black text-xl">Couldn&apos;t extract that YouTube link</h3>
+        {errorMeta?.title && <p className="font-bold text-sm line-clamp-2">{errorMeta.title}{errorMeta.author ? ` — ${errorMeta.author}` : ''}</p>}
         <p className="text-sm opacity-80 break-words">{error}</p>
-        <p className="text-xs opacity-60">Extraction runs on your own connection — home Wi-Fi works best. Age-restricted, private, or region-blocked videos cannot be downloaded anonymously.</p>
+        <p className="text-xs opacity-60">
+          {errorCode === 'NETWORK_BLOCKED'
+            ? 'Diagnosis: this connection blocked YouTube before it answered. Turn off VPN / ad-blocker / antivirus filtering, or switch to mobile data, then retry.'
+            : errorCode === 'STREAMS_REFUSED'
+              ? 'Diagnosis: YouTube answered but refuses anonymous streams on this connection. Retrying here rarely helps — switch networks (mobile data works best) and try again.'
+              : 'Extraction runs on your own connection — home Wi-Fi works best. Age-restricted, private, or region-blocked videos cannot be downloaded anonymously.'}
+        </p>
+        <div className="flex gap-2 justify-center flex-wrap">
+          <button onClick={() => window.location.reload()} className="px-6 py-2.5 rounded-full bg-error text-error-on font-bold text-sm">Retry</button>
+          <button
+            onClick={() => { try { navigator.clipboard.writeText(url); } catch { /* clipboard unavailable */ } }}
+            className="px-6 py-2.5 rounded-full font-bold text-sm border border-current opacity-80"
+          >
+            Copy link
+          </button>
+        </div>
       </div>
     );
   }

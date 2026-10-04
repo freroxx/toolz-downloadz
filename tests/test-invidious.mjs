@@ -127,9 +127,15 @@ describe('extractYouTube chain', () => {
     assert.equal(player.videoDetails.title, 'Never Gonna Give You Up');
     assert.ok(calls.some((c) => c.includes('chocolatemoo')));
   });
-  it('throws when every source fails', async () => {
+  it('throws a diagnosed NETWORK_BLOCKED error when every source fails', async () => {
     const mock = async () => ({ ok: false, status: 403 });
-    await assert.rejects(() => extractYouTube('x', { fetchImpl: mock }), /streams/i);
+    await assert.rejects(
+      extractYouTube('x', { fetchImpl: mock }),
+      (e) => {
+        assert.equal(e.code, 'NETWORK_BLOCKED');
+        return true;
+      },
+    );
   });
   it('ships at least one instance (never an empty chain)', () => {
     assert.ok(INVIDIOUS_INSTANCES.length >= 1);
