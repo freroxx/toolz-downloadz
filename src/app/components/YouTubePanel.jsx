@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { extractVideoId, sanitizeYouTubeUrl } from '@/lib/youtube/url';
 import {
+  activeKeyInfo,
   buildLadder,
   fetchPlayerWithFallback,
 } from '@/lib/youtube/innertube';
@@ -59,6 +60,9 @@ export default function YouTubePanel({ url }) {
         const clean = sanitizeYouTubeUrl(url);
         const id = extractVideoId(clean);
         if (!id) throw new Error('Could not find a video id in that link.');
+        const info = activeKeyInfo();
+        // eslint-disable-next-line no-console
+        console.info(`[youtube] extracting ${id} (key ${info.keyPrefix}…, ${info.isFallback ? 'built-in fallback' : 'env key'})`);
         const { player } = await fetchPlayerWithFallback(id);
         if (cancelled || ctrl.signal.aborted) return;
         const lad = buildLadder(player, id, codecPref);

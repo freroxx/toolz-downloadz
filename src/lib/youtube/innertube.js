@@ -25,37 +25,52 @@ export const INNER_TUBE_KEY =
     process.env.NEXT_PUBLIC_INNERTUBE_API_KEY) ||
   'AIzaSyA8eiZmM1FaDVjRy-df2KTyQ_vz_yYM39w'; // public web key, same class as NewPipe/yt-dlp
 
+/** Which key is baked into this build (public key — safe to log). */
+export function activeKeyInfo() {
+  const fromEnv = !!(
+    typeof process !== 'undefined' &&
+    process.env &&
+    process.env.NEXT_PUBLIC_INNERTUBE_API_KEY
+  );
+  return { keyPrefix: String(INNER_TUBE_KEY).slice(0, 12), isFallback: !fromEnv };
+}
+
 const WEB_BASE = 'https://www.youtube.com/youtubei/v1';
 
+// Fresh player clients (aligned with yt-dlp master INNERTUBE_CLIENTS,
+// Jul 2026; WEB re-verified live from a youtube.com watch page, Oct 2026:
+// INNERTUBE_CONTEXT_CLIENT_VERSION 2.20261002.01.00).
+// Stale client versions get rejected/cipher-only by YouTube — refresh these
+// from yt-dlp master when HD extractions start failing again.
 export const PLAYER_CLIENTS = [
   {
     name: 'ANDROID',
-    clientVersion: '21.03.36',
-    ua: 'com.google.android.youtube/21.03.36 (Linux; U; Android 15; en_US) gzip',
+    clientVersion: '21.26.364',
+    ua: 'com.google.android.youtube/21.26.364 (Linux; U; Android 11) gzip',
     extra: {
-      androidSdkVersion: 35,
+      androidSdkVersion: 30,
       osName: 'Android',
-      osVersion: '15',
+      osVersion: '11',
       hl: 'en',
       gl: 'US',
     },
   },
   {
     name: 'IOS',
-    clientVersion: '21.03.2',
-    ua: 'com.google.ios.youtube/21.03.2(iPhone16,2; U; CPU iOS 18_7_2 like Mac OS X; en_US)',
+    clientVersion: '21.26.4',
+    ua: 'com.google.ios.youtube/21.26.4 (iPhone16,2; U; CPU iOS 18_3_2 like Mac OS X;)',
     extra: {
       deviceMake: 'Apple',
       deviceModel: 'iPhone16,2',
-      osName: 'iOS',
-      osVersion: '18.7.2.22H124',
+      osName: 'iPhone',
+      osVersion: '18.3.2.22D82',
       hl: 'en',
       gl: 'US',
     },
   },
   {
     name: 'WEB',
-    clientVersion: '2.20260120.01.00',
+    clientVersion: '2.20261002.01.00',
     ua: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36',
     extra: { hl: 'en', gl: 'US', utcOffsetMinutes: 0 },
   },

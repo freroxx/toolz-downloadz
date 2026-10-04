@@ -1,6 +1,8 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  PLAYER_CLIENTS,
+  activeKeyInfo,
   adaptiveVideoAtOrBelow,
   bestAudio,
   buildLadder,
@@ -118,6 +120,24 @@ describe('buildLadder', () => {
     const lad = buildLadder({}, 'x', 'compat');
     assert.deepEqual(lad.merged, []);
     assert.deepEqual(lad.heights, []);
+  });
+});
+
+describe('activeKeyInfo', () => {
+  it('reports key prefix and fallback state (shape stable for console diagnostics)', () => {
+    const info = activeKeyInfo();
+    assert.equal(typeof info.keyPrefix, 'string');
+    assert.equal(info.keyPrefix.length, 12);
+    assert.equal(typeof info.isFallback, 'boolean');
+  });
+});
+
+describe('PLAYER_CLIENTS freshness', () => {
+  it('pins current client versions — update from yt-dlp master when HD fails', () => {
+    const byName = Object.fromEntries(PLAYER_CLIENTS.map((c) => [c.name, c.clientVersion]));
+    assert.equal(byName.ANDROID, '21.26.364');
+    assert.equal(byName.IOS, '21.26.4');
+    assert.equal(byName.WEB, '2.20261002.01.00');
   });
 });
 
