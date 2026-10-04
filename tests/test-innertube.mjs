@@ -145,6 +145,18 @@ describe('fetchPlayerWithFallback', () => {
     playabilityStatus: { status: 'OK' },
     streamingData: { formats: [{ url: 'https://r1/x', mimeType: 'video/mp4', height: 360 }] },
   };
+  it('stays CORS-simple: text/plain, no custom headers (else browsers preflight and YouTube 403s)', async () => {
+    let seen;
+    const mock = async (url, opts) => {
+      seen = opts;
+      return { ok: true, json: async () => okMuxed };
+    };
+    await fetchPlayerWithFallback('dQw4w9WgXcQ', mock);
+    assert.equal(seen.method, 'POST');
+    assert.deepEqual(Object.keys(seen.headers), ['Content-Type']);
+    assert.match(seen.headers['Content-Type'], /^text\/plain/);
+    assert.ok(seen.body.includes('"videoId":"dQw4w9WgXcQ"'));
+  });
   it('takes the first usable client', async () => {
     const seen = [];
     const mock = async (url, opts) => {

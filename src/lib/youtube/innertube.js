@@ -3,8 +3,15 @@
  *
  * Runs on the USER's IP (residential, clean), so YouTube answers OK where
  * datacenter servers get 403 / LOGIN_REQUIRED. No PO-token server, no
- * cookies, no proxy: plain fetch() from the browser, which YouTube's
- * youtubei endpoint allows via CORS (Access-Control-Allow-Origin: *).
+ * cookies, no proxy: plain fetch() from the browser.
+ *
+ * CORS WARNING: youtubei answers simple cross-origin POSTs (it echoes
+ * Access-Control-Allow-Origin on 200s — verified live against /oembed on the
+ * same host), but its preflight (OPTIONS) handler drops requests declaring
+ * custom headers. So this MUST stay a CORS-simple request: no custom
+ * headers, Content-Type MUST be text/plain (application/json triggers a
+ * preflight YouTube rejects). YouTube parses the JSON body regardless of the
+ * content-type label. Do not "fix" it back to application/json.
  *
  * Client rotation ANDROID -> IOS -> WEB with fresh versions (aligned with
  * NewPipeExtractor 0.26.5 / Android InnerTubeClient.kt). First player with
@@ -106,7 +113,9 @@ export async function fetchPlayer(videoId, client, fetchImpl) {
   const impl = fetchImpl || fetch;
   const res = await impl(`${WEB_BASE}/player?key=${INNER_TUBE_KEY}&prettyPrint=false`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    // text/plain keeps this a CORS-simple request (no preflight — see header
+    // comment). Browsers forbid overriding User-Agent etc. anyway.
+    headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
     body: JSON.stringify(buildPlayerBody(videoId, client)),
   });
   if (!res.ok) {
