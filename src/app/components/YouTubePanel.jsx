@@ -2,11 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { extractVideoId, sanitizeYouTubeUrl } from '@/lib/youtube/url';
-import {
-  activeKeyInfo,
-  buildLadder,
-  fetchPlayerWithFallback,
-} from '@/lib/youtube/innertube';
+import { activeKeyInfo, buildLadder } from '@/lib/youtube/innertube';
+import { extractYouTube } from '@/lib/youtube/extract';
 import {
   downloadToBytes,
   formatBytes,
@@ -63,7 +60,9 @@ export default function YouTubePanel({ url }) {
         const info = activeKeyInfo();
         // eslint-disable-next-line no-console
         console.info(`[youtube] extracting ${id} (key ${info.keyPrefix}…, ${info.isFallback ? 'built-in fallback' : 'env key'})`);
-        const { player } = await fetchPlayerWithFallback(id);
+        const { player, source } = await extractYouTube(id);
+        // eslint-disable-next-line no-console
+        console.info(`[youtube] extraction source: ${source}`);
         if (cancelled || ctrl.signal.aborted) return;
         const lad = buildLadder(player, id, codecPref);
         if (!lad.merged.length && !lad.videoOnly.length && !lad.audios.length) {

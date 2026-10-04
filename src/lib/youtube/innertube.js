@@ -74,6 +74,21 @@ export const PLAYER_CLIENTS = [
     ua: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36',
     extra: { hl: 'en', gl: 'US', utcOffsetMinutes: 0 },
   },
+  // Embed paths: minimal clients YouTube keeps permissive for embedded
+  // playback. Often survive when the main clients demand PO tokens.
+  // (Shapes mirror yt-dlp master tv_simply / web_embedded.)
+  {
+    name: 'TVHTML5_SIMPLY',
+    clientVersion: '1.0',
+    ua: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36',
+    extra: { hl: 'en', gl: 'US' },
+  },
+  {
+    name: 'WEB_EMBEDDED_PLAYER',
+    clientVersion: '2.20261002.01.00',
+    ua: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36',
+    extra: { hl: 'en', gl: 'US', utcOffsetMinutes: 0 },
+  },
 ];
 
 export function isDirectUrl(fmt) {
