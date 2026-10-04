@@ -6,9 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "node --test tests/test-url.mjs tests/test-innertube.mjs tests/test-fetch.mjs tests/test-merge.mjs tests/test-flow.mjs"
   },
   "dependencies": {
+    "@ffmpeg/ffmpeg": "^0.11.6",
     "next": "^15.1.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

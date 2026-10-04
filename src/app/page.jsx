@@ -1,8 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import YouTubePanel from './components/YouTubePanel'
+import { isYouTubeUrl } from '@/lib/youtube/url'
 
 const PLATFORMS = [
+  { id: 'youtube', name: 'YouTube', style: 'bg-red-600 text-white' },
   { id: 'tiktok', name: 'TikTok', style: 'bg-black text-white' },
   { id: 'instagram', name: 'Instagram', style: 'bg-gradient-to-tr from-[#F58529] via-[#DD2A7B] to-[#8134AF] text-white' },
 ]
@@ -69,6 +72,7 @@ export default function Home() {
   const [selected, setSelected] = useState('best')
   const [audioOnly, setAudioOnly] = useState(false)
   const [sessionReady, setSessionReady] = useState(false)
+  const [ytUrl, setYtUrl] = useState(null) // client-side YouTube path (no server)
 
   useEffect(() => {
     const q = new URLSearchParams(window.location.search).get('url')
@@ -115,6 +119,17 @@ export default function Home() {
     e?.preventDefault()
     const wantAudio = mode ?? audioOnly
     if (!url.trim() || status === 'loading') return
+    // YouTube runs fully on-device (user IP + user CPU): no server, no cost,
+    // no datacenter block. Hand off to the client-side panel.
+    if (isYouTubeUrl(url.trim())) {
+      setError('')
+      setData(null)
+      setYtUrl(url.trim())
+      window.history.replaceState(null, '', `?url=${encodeURIComponent(url)}`)
+      setStatus('yt')
+      return
+    }
+    setYtUrl(null)
     setStatus('loading')
     setError('')
     setData(null)
@@ -303,14 +318,15 @@ export default function Home() {
           <input
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            placeholder="Paste a public TikTok or Instagram link…"
+            placeholder="Paste a YouTube, TikTok or Instagram link…"
             inputMode="url"
             autoComplete="off"
-            aria-label="TikTok or Instagram link"
+            aria-label="YouTube, TikTok or Instagram link"
             className="w-full pl-6 pr-32 py-5 rounded-full bg-surface-bright text-lg border-4 border-transparent focus:border-primary/25 outline-none placeholder:text-surface-on-variant/40 shadow-lg dark:shadow-black/40 transition-all"
           />
           <button
-            disabled={status === 'loading' || !sessionReady}
+            disabled={status === 'loading' || (!sessionReady && !isYouTubeUrl(url.trim() || ''))}
+            title={sessionReady ? 'Get' : isYouTubeUrl(url.trim() || '') ? 'Get (works without server session)' : 'Preparing your private download session…'}
             className="absolute right-2 top-1/2 -translate-y-1/2 px-7 py-3 rounded-full bg-primary text-primary-on font-black hover:brightness-110 active:scale-95 disabled:opacity-50 transition-all shadow"
           >
             {status === 'loading' ? '…' : sessionReady ? 'Get' : '…'}
@@ -333,6 +349,10 @@ export default function Home() {
 
         {/* Result area */}
         <div className="w-full">
+          {status === 'yt' && ytUrl && (
+            <YouTubePanel key={ytUrl} url={ytUrl} />
+          )}
+
           {status === 'loading' && (
             <div key="l" className="w-full space-y-4 animate-[fadein_.3s_ease]">
               <div className="aspect-video rounded-[2rem] bg-surface-container-high animate-pulse" />
@@ -444,7 +464,7 @@ export default function Home() {
       </main>
 
       <footer className="pb-10 text-center text-xs font-black tracking-[0.4em] uppercase text-surface-on-variant/25">
-        TikTok and Instagram Downloader
+        YouTube · TikTok and Instagram Downloader
       </footer>
     </div>
   )
