@@ -2,7 +2,9 @@ import { NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-export const maxDuration = 30;
+// YouTube extraction can legitimately take ~40s (service budget 38s, API budget 50s);
+// a 30s proxy would cut off extractions the backend is about to complete.
+export const maxDuration = 60;
 
 const API_URL = (process.env.API_URL || 'https://toolz-downloadz-api.vercel.app').replace(/\/$/, '');
 const SESSION_COOKIE = 'toolz_downloadz_session';
