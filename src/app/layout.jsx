@@ -9,11 +9,11 @@ const plusJakarta = Plus_Jakarta_Sans({
 })
 
 export const metadata = {
-  title: 'Toolz Downloadz — YouTube, TikTok & Instagram Downloader',
-  description: 'Paste a YouTube, TikTok or Instagram link and get the video. Fast, free, no login. YouTube merges on your device; TikTok & Instagram via a FastAPI engine.',
+  title: 'Toolz Downloadz — TikTok & Instagram Downloader',
+  description: 'Paste a TikTok or Instagram link and get the video. Fast, free, no login. Built with Next.js + a FastAPI extraction engine.',
   metadataBase: new URL('https://toolz-downloadz.vercel.app'),
   openGraph: {
-    title: 'Toolz Downloadz — YouTube, TikTok & Instagram Downloader',
+    title: 'Toolz Downloadz — TikTok & Instagram Downloader',
     description: 'Paste a link. Get the video. Thatʼs it.',
     type: 'website',
   },

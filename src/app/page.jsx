@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { isYouTubeUrl } from '@/lib/youtube/url'
 
 const PLATFORMS = [
-  { id: 'youtube', name: 'YouTube', style: 'bg-red-600 text-white' },
   { id: 'tiktok', name: 'TikTok', style: 'bg-black text-white' },
   { id: 'instagram', name: 'Instagram', style: 'bg-gradient-to-tr from-[#F58529] via-[#DD2A7B] to-[#8134AF] text-white' },
 ]
@@ -116,6 +116,15 @@ export default function Home() {
     e?.preventDefault()
     const wantAudio = mode ?? audioOnly
     if (!url.trim() || status === 'loading') return
+    // YouTube isn't available on the web (YouTube blocks web downloaders).
+    // Say so honestly instead of spending an extraction call on it.
+    if (isYouTubeUrl(url.trim())) {
+      setError('')
+      setData(null)
+      window.history.replaceState(null, '', `?url=${encodeURIComponent(url)}`)
+      setStatus('yt-blocked')
+      return
+    }
     setStatus('loading')
     setError('')
     setData(null)
@@ -304,10 +313,10 @@ export default function Home() {
           <input
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            placeholder="Paste a YouTube, TikTok or Instagram link…"
+            placeholder="Paste a public TikTok or Instagram link…"
             inputMode="url"
             autoComplete="off"
-            aria-label="YouTube, TikTok or Instagram link"
+            aria-label="TikTok or Instagram link"
             className="w-full pl-6 pr-32 py-5 rounded-full bg-surface-bright text-lg border-4 border-transparent focus:border-primary/25 outline-none placeholder:text-surface-on-variant/40 shadow-lg dark:shadow-black/40 transition-all"
           />
           <button
@@ -334,6 +343,18 @@ export default function Home() {
 
         {/* Result area */}
         <div className="w-full">
+          {status === 'yt-blocked' && (
+            <div key="yt" className="w-full p-8 rounded-[2rem] bg-surface-container border border-outline-variant/10 shadow-xl text-center space-y-4 animate-[fadein_.3s_ease]">
+              <div className="text-4xl">🎬</div>
+              <h3 className="font-black text-xl">YouTube isn&apos;t available on the web</h3>
+              <p className="text-sm opacity-80">YouTube blocks web downloaders, so we can&apos;t fetch YouTube links here. The Toolz app&apos;s media downloader supports YouTube, TikTok and Reels.</p>
+              <a href="https://github.com/freroxx/toolz" target="_blank" rel="noopener noreferrer"
+                className="inline-block px-6 py-2.5 rounded-full bg-primary text-primary-on font-bold text-sm">
+                Get Toolz on GitHub
+              </a>
+            </div>
+          )}
+
           {status === 'loading' && (
             <div key="l" className="w-full space-y-4 animate-[fadein_.3s_ease]">
               <div className="aspect-video rounded-[2rem] bg-surface-container-high animate-pulse" />
@@ -445,7 +466,7 @@ export default function Home() {
       </main>
 
       <footer className="pb-10 text-center text-xs font-black tracking-[0.4em] uppercase text-surface-on-variant/25">
-        YouTube · TikTok and Instagram Downloader
+        TikTok and Instagram Downloader
       </footer>
     </div>
   )
