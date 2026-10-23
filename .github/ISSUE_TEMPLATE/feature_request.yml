@@ -1,0 +1,20 @@
+name: "Feature Proposal"
+description: "Suggest a UI refinement or new feature for Toolz Downloadz"
+title: "[Proposal]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: "Proposal Details"
+      description: "Explain the proposed feature, user workflow, and benefits."
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: "Checklist"
+      options:
+        - label: "This proposal does not involve DRM circumvention."
+          required: true

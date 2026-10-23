@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: "🔒 Security Vulnerability Report"
+    url: "https://github.com/freroxx/toolz-downloadz/blob/main/SECURITY.md"
+    about: "Report security vulnerabilities privately via email."
+  - name: "⚙️ Toolz Downloadz API Backend"
+    url: "https://github.com/freroxx/toolz-downloadz-api"
+    about: "For backend extraction bugs, please visit the toolz-downloadz-api repository."
+  - name: "💬 Discord Server"
+    url: "https://discord.gg/aAswRUerwh"
+    about: "Join our community Discord."

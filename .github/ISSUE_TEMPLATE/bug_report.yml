@@ -1,0 +1,59 @@
+name: "Bug Report"
+description: "Report a bug or visual defect in Toolz Downloadz"
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: platform
+    attributes:
+      label: "Platform Being Downloaded"
+      options:
+        - "TikTok"
+        - "Instagram"
+        - "YouTube"
+        - "UI / Layout General"
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: "Browser & OS"
+      placeholder: "e.g. Chrome 130 on Windows 11 / Safari on iOS"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: "Steps to Reproduce"
+      placeholder: |
+        1. Paste URL into input field
+        2. Click 'Download'
+        3. Format picker renders empty or displays an error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: "Expected Behavior"
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: "Actual Behavior"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: "Checklist"
+      options:
+        - label: "I confirm this issue does not contain copyright-infringing content or requests."
+          required: true
+        - label: "I searched open issues to ensure this is not a duplicate."
+          required: true
