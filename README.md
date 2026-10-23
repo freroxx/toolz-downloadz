@@ -1,58 +1,108 @@
-# toolz-downloadz
+<div align="center">
+  <img src="https://i.ibb.co/jvt7B2Cy/toolz-glass-icon-dark-bg.png" width="80" alt="Toolz Logo" />
+  <h1>Toolz Downloadz</h1>
+  <p><strong>The sleek, multi-platform media downloader frontend — TikTok · Instagram · YouTube</strong></p>
 
-Paste a public TikTok or Instagram link and save its native media. Next.js frontend for [toolz-downloadz-api](https://github.com/freroxx/toolz-downloadz-api).
+  [![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
+  [![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
+  [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+  [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+  [![Vercel](https://img.shields.io/badge/Deployed_on-Vercel-000?style=for-the-badge&logo=vercel&logoColor=white)](https://vercel.com/)
+  [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue?style=for-the-badge&logo=gnu&logoColor=white)](LICENSE)
+</div>
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Ffreroxx%2Ftoolz-downloadz&env=API_URL,API_SECRET_KEY)
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+---
 
-Deploy the API first, then point this app at it.
+## ✨ What is Toolz Downloadz?
 
-## How it works
+**Toolz Downloadz** is the web frontend for downloading media from TikTok, Instagram, and YouTube. Built with Next.js and styled with a Material 3-inspired design system, it connects to the [toolz-downloadz-api](https://github.com/freroxx/toolz-downloadz-api) backend to deliver clean, watermark-free downloads in seconds.
 
-The browser only talks to Next.js `/api/*` routes. On first use, the web app
-creates an anonymous API session held in an HttpOnly cookie:
+Just paste a URL. Pick a quality. Download.
 
-- `POST /api/session` creates or refreshes the private browser session.
-- `GET /api/extract?url=…&audio_only=…` creates an opaque v1 extraction.
-- `GET /api/download?e=…&a=…` streams the selected opaque asset. No source URL, API key, or bearer token is placed in the browser address bar.
+---
 
-The UI shows thumbnail, title, uploader, stats, and a quality picker grouped into video with sound / video only / audio. Rows state observed specs (`1080p HD`, dimensions, size, codec); `~`-prefixed labels are approximate and unknown sizes render as "size unknown". The video grid collapses when Best already covers the only video row, and the download button names the default quality. TikTok results list the full ladder up front (540p / 720p H.264 / 720p HEVC / 1080p). A Video/MP3 toggle switches between video and audio extraction, and a nav button cycles the theme (auto follows the OS, saved in localStorage). Shared links (`/?url=<link>`) pre-fill the input.
+## 🚀 Features
 
-## Deploy
+| Feature | Description |
+|---|---|
+| 🔗 **Universal URL Input** | Paste any TikTok, Instagram, or YouTube link |
+| 🎬 **Quality Picker** | Choose 720p, 1080p, 4K, or Audio-Only |
+| 🖼️ **Gallery Support** | Multi-image TikTok posts download as a zip |
+| 🚫 **No Watermarks** | Architecture-aware download pipeline strips platform branding |
+| 📱 **Mobile-Responsive** | Material 3-inspired UI that looks great on any screen |
 
-Import in Vercel (Framework Preset: Next.js), set these vars, deploy:
+---
 
-| Variable | Required | Example |
-|---|---|---|
-| `API_URL` | yes | `https://<your-api>.vercel.app` (no trailing slash) |
-| `API_SECRET_KEY` | no | Needed only while proxying legacy API routes; new v1 routes do not use it. |
+## 🛠️ Setup & Development
 
-## Local dev
+### Prerequisites
+
+- Node.js 20+
+- A running [toolz-downloadz-api](https://github.com/freroxx/toolz-downloadz-api) instance
+
+### Install dependencies
 
 ```bash
 npm install
-cp .env.example .env   # set API_URL + API_SECRET_KEY
-npm run dev            # http://localhost:3000
 ```
 
-`npm run build`, `npm start`, `npm run lint`. Point `API_URL` at the deployed API or a local one (`http://localhost:8000`).
+### Configure environment
 
-## Project structure
-
-```
-src/app/page.jsx              # the UI: input, result card, quality picker, download
-src/app/layout.jsx            # fonts, metadata
-src/app/globals.css           # Tailwind + Material 3 tokens (light/dark)
-src/app/api/extract/route.js  # proxy to API /api/extract
-src/app/api/download/route.js # 307 redirect to API /api/download
+```bash
+cp .env.local.example .env.local
 ```
 
-Branding lives in `page.jsx` and `layout.jsx`; theme tokens in `globals.css` + `tailwind.config.js`.
+Open `.env.local` and fill in:
 
-Manual smoke test: TikTok URL downloads mp4; MP3 mode downloads audio; Instagram reel works (needs `INSTAGRAM_COOKIES` on the API); YouTube/Vimeo shows the unsupported-URL error; API down shows the unreachable-API error.
+```env
+NEXT_PUBLIC_API_URL=https://your-api-instance.vercel.app
+API_SECRET_KEY=your-secret-key
+```
 
-Contributions: fork, branch, PR with screenshots for UI changes. Keep dependencies to Next + React + Tailwind; no secrets in client components.
+### Run locally
 
-Legal: only download content you own or have the right to save. Not affiliated with TikTok, Meta, or Vercel.
+```bash
+npm run dev
+```
 
-License: [GPL-3.0](LICENSE).
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+### Build for production
+
+```bash
+npm run build && npm start
+```
+
+---
+
+## ☁️ Deploy to Vercel
+
+The easiest way to deploy is with the [Vercel Platform](https://vercel.com/new):
+
+1. Push this repo to GitHub
+2. Import into Vercel
+3. Set your environment variables in the Vercel dashboard
+4. Deploy 🎉
+
+---
+
+## 🔗 Companion Repos
+
+This frontend is part of the **Toolz** suite:
+
+| Repo | Role |
+|---|---|
+| [toolz-downloadz-api](https://github.com/freroxx/toolz-downloadz-api) | REST API backend powering downloads |
+| [toolz](https://github.com/freroxx/toolz) | Main Toolz suite app |
+
+---
+
+## 📄 License
+
+Distributed under the **GNU General Public License v3.0**. See [`LICENSE`](LICENSE) for details.
+
+---
+
+<div align="center">
+  <sub>Part of the <a href="https://github.com/freroxx/toolz"><strong>Toolz Suite</strong></a> · Built with ❤️ by freroxx</sub>
+</div>
